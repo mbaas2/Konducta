@@ -1,0 +1,11 @@
+ r←{n}Word sentence;p
+⍝ pick the nth word (default: 1) of a sentence (space-separated list of words)
+ :If 0=⎕NC'n'
+     n←1     ⍝ default
+ :EndIf
+ p←' '(≠⊆⊢)sentence    ⍝ parts
+ :If n≤≢p
+     r←n⊃p
+ :Else
+     r←''
+ :EndIf

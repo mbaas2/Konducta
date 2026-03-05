@@ -1,0 +1,151 @@
+ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping
+⍝ Initialises eventler and starts the main "listinging loop"
+⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
+⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
+ ⎕SE.SESSIONSTART←'*** eventler *** ',⍕⎕TS
+ Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'EVENTLER_HOME'
+ ⎕←'Home=',Home
+ :If 0=#.⎕NC'launchTS'
+     #.launchTS←20 ⎕DT⊂⎕TS
+ :EndIf
+ :If ~⎕NEXISTS Home,'Data'
+     ⎕MKDIR Home,'Data'
+     ⎕MKDIR Home,'Data/evq'
+     ⎕MKDIR Home,'Data/evq/done'
+     ⎕MKDIR Home,'Data/Trash'
+ :EndIf
+ :If 0<z←≢⊃0(⎕NINFO⍠1)Home,'Data/evq/*.json5'
+     (⎕NDELETE⍠'Wildcard' 1)Home,'Data/evq/*.json5'
+     ⎕←'Deleted ',(⍕z),' old files from queue during startup'
+ :EndIf
+ ⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
+
+ '#.Triggers'⎕NS''
+ rules←⎕JSON Code.readConfig Home,'Config/rules.json5'
+ #.Triggers.Config←⎕JSON Code.readConfig Home,'Config/triggers.json5'   ⍝ read config file
+ #.Config←⎕JSON Code.readConfig Home,'Config/eventler.json5'   ⍝ read config file
+ Trapping←#.Config{6::0 ⋄ ⍺⍎⍵}'Trapping'
+
+ jarvis_callbacks←⍬
+ check_freq←⌊/⍬
+ #.Triggers.(list instances handlers)←⊂⍬
+ :For ns :In #.Triggers.Config.⎕NL ¯9
+     ⎕←'setup ',ns
+⍝     ∘∘∘
+     :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
+         ⍎'#.Triggers.Config.',ns,'.config.id←ns'
+         ⍎'#.Triggers.Config.',ns,'.config.Folder←''',Home,'Data/',ns,'/',''''
+         ref←Triggers.Config.⍎ns
+         3 ⎕MKDIR ⎕←ref.config.Folder  ⍝ be sure that Folder exists
+         hdl←ref.handler
+         ⎕←'Handler = ⎕NEW ',(#.Code⍎hdl),'(ref.handler_cfg ns ref)'
+         hdl←⎕NEW(#.Code⍎hdl)(ref.handler_cfg ns ref)
+         #.Triggers.handlers,←hdl
+         cls←('#.Triggers.'{⍺,⍵,'.',⍵}' '~⍨⍕ref.type)
+         ⎕←'Instanz'
+         #.Triggers.list←⊂⎕←'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
+         #.Triggers.instances,←r2←⍎⊃¯1↑#.Triggers.list
+         hdl.TheInstance←r2
+         check_freq←check_freq⌊ref{6::⌊/⍬ ⋄ ⍎'⍺.',⍵}'check_freq_secs'
+         :If 2=ref.⎕NC'jarvis_callbacks'
+         :AndIf 0<≢ref.jarvis_callbacks
+             :If ∨/z←(⊆ref.jarvis_callbacks)∊jarvis_callbacks
+                 ⎕←'*** Attempt to register duplicate Jarvis callback(s): ',z/⊆ref.jarvis_callbacks
+             :EndIf
+             jarvis_callbacks,←(~z)/⊆ref.jarvis_callbacks
+         :EndIf
+     :EndIf
+ :EndFor
+
+ :If 0<≢jarvis_callbacks
+⍝ we need Jarvis! so lets launch it
+     '#.CodeLocation'⎕NS''
+
+⍝ and create those callback-functions
+     #.CodeLocation.⎕FX¨{('∇r←{l} ',⍵,' r')'l #.Code.jarvis_callback2Q r' '∇'}¨jarvis_callbacks
+
+⍝ and configure it
+     'JarvisConfig'⎕NS''
+     JarvisConfig.CodeLocation←#.CodeLocation
+     JarvisConfig.Port←#.Triggers.Config.JarvisPort
+     JarvisConfig.Paradigm←'JSON'
+     JarvisConfig.HTMLInterface←Home,'HTML/'
+     JarvisConfig.HTMLDefaultPage←''
+     JarvisConfig.Jarvis_Thread←0
+     JarvisConfig.AllowGETs←1  ⍝ allow calling endpoints with Http-GET
+     JarvisConfig.Debug←#.Triggers.Config'JarvisDebug'{0=(1⊃⍺).⎕NC 2⊃⍺:⍵ ⋄ ⍎/⍺}0
+⍝ should add ValidateRequest and check for some credentials to make it harder to hack
+     #.jarvis←#.Code.Jarvis.New JarvisConfig
+     :If 0≠⊃⎕←#.jarvis.Start
+         ∘∘∘
+     :EndIf
+     #.JARVIS_URL←'http://',#.Triggers.Config.JarvisHost,((#.Triggers.Config.JarvisPort≠80)/':',(⍕#.Triggers.Config.JarvisPort)),'/'
+ :EndIf
+
+ 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Eventler version ',#.Config.version
+
+⍝ aktualisierung triggers umschreiben!!! (entweder anfang oder ende, aber nicht 2*!)
+⍝ update list of events
+⍝ (record into file or variable?)
+ :Trap 802 803
+     :Trap 801,Trapping/0
+         :If check_freq<⌊/⍬  ⍝ do we have anything to watch?
+             :Repeat
+                 i←0
+                 :For trg :In #.Triggers.list
+            ⍝ this logic recreates instances with every loop!
+            ⍝ that's a bit too costly (with NuGet etc.)
+            ⍝ maybe we should re-create instances only if config was changed! (keep a timestamp of config files in instance...)
+            ⍝ (for the initial proof of concept this is fine, but should be addressed later!)
+                     i+←1
+                     ⎕←⎕TS,trg
+                     Handler←i⊃#.Triggers.handlers  ⍝ "Handler" might be used  in rules or "Run"
+                     ⎕←'trg='
+                     ref←i⊃#.Triggers.instances   ⍝ see initial comments about re-creating instances only when needed!
+                     :If 0<≢events←ref⍎'Run ⍬'
+               ⍝ add to queue...
+                         add2Q¨events
+                     :EndIf
+                     ⎕←'≢events=',≢events
+                 :EndFor
+                 procEvents
+                 ref←Triggers.Config⍎ns
+                 :If #.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
+                     #.Config←⎕JSON #.Code.readConfig Home,'Config/eventler.json5'
+                     'INFO' 'SYS'Handler.Log #.Config.file,' updated, re-reading...'
+                 :EndIf
+                 :If #.Triggers.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
+                     'INFO' 'SYS'Handler.Log #.Triggers.Config.file,' updated, re-reading...'
+                     #.Triggers.Config←⎕JSON #.Code.readConfig Home,'Config/triggers.json5'   ⍝ read config file
+                     :For ns :In #.Triggers.Config.⎕NL ¯9
+                         :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
+                             ⍎'#.Triggers.Config.',ns,'.config.id←ns'
+                             ⍎'#.Triggers.Config.',ns,'.config.Folder←''',Home,'Data/',ns,'/',''''
+                         :EndIf
+                     :EndFor
+                 :EndIf
+                 :If rules.(UTC<⊃13 ⎕NINFO File)
+                     'INFO' 'SYS'Handler.Log rules.file,' updated, re-reading...'
+                     rules←⎕JSON #.Code.readConfig Home,'Config/rules.json5'
+                 :EndIf
+                 :If #.Config.debug _hasBitSet 3
+                     (⎕LC[1]+1)⎕STOP 1⊃⎕SI
+                     ⎕←'Stopping after execution of one loop as request by Config.debug'
+                 :Else
+                     ⎕DL check_freq  ⍝ wait...
+                 :EndIf
+             :Until 0
+         :EndIf
+     :Else
+         :Select ⎕EN
+         :Case 801   ⍝ RESTART Event (triggered by GITUPD)
+             →1
+         :EndSelect
+     :EndTrap
+ :Case 802 ⍝ DETRAP
+     Trapping←0
+     'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Disabled trapping'
+ :Case 803 ⍝ RETRAP
+     Trapping←1
+     'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Enabled trapping'
+ :EndTrap

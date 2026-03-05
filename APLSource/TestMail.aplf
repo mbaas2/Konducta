@@ -1,0 +1,18 @@
+ TestMail;larg
+
+ larg←⎕NS''
+ larg.Server←'mbaas.de'
+ larg.Port←465
+ larg.(From Userid)←⊂'pop3test@mbaas.de'
+ larg.Password←'D7!t7tm44'
+ larg.Secure←1
+⍝     Server   - address of the SMTP server
+ ⍝     Port     - port for the SMTP server
+ ⍝     From     - "from" email address; if Userid is not specified From is also used for authentication if necessary
+ ⍝     Password - password to access the SMTP server
+ ⍝     Userid   - userid for authentication; not needed if it's the same as From
+ ⍝     Secure   - Boolean indicating whether to use SSL/TLS; if not specified Secure will be inferred from the Port
+
+
+
+ larg #.Code.SendMail'mbaas.michaelbaas@gmail.com' 'Hello world!' 'Yes, this works!'

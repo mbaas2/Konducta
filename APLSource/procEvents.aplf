@@ -1,0 +1,19 @@
+ procEvents;f;E;R;z;⎕PATH;ac;if;n;CFG
+⍝ check event queue and process waiting events...
+
+ :For f :In ⊃0(⎕NINFO ⎕OPT'Wildcard' 1)Home,'Data/evq/*.json5'
+     E←0(⎕JSON⍠'Dialect' 'JSON5')1⊃⎕NGET f
+     E.EventQueue_File←f
+     CFG←#.Triggers.Config⍎E.cfg   ⍝ get config of trigger
+     ⎕←'[procEvents] ',E.cfg,' von: ',E.sender,' / Betreff: ',E.subject
+
+     :For n :In rules.⎕NL ¯9
+         R←rules⍎n
+        ⍝ check if a rule applies...
+         Handler applyRule R E
+     :EndFor
+     :if ~#.Config.debug _hasBitSet 4
+     :andif ⎕nexists f
+        (Home,'Data/evq/done/')⎕nmove f
+     :endif
+ :EndFor

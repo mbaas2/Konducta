@@ -1,0 +1,11 @@
+ m←getMaddr m;r
+⍝ extract essential address parts from "blabla <foo@goo.com>"
+ :If 1<≡m
+     m←getMaddr¨m
+     →0
+ :EndIf
+m←⎕c m
+m←((∨\~m∊' "')∧⌽∨\~⌽m∊' "')/m   ⍝ trim leading/trailing spaces and quotes
+ :If 0<≢r←('.*<([^>]*)>'⎕S'\1')m
+     m←⊃r
+ :EndIf

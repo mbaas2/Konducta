@@ -1,0 +1,16 @@
+ res←readConfig File;cfg;Env;Exec
+ Env←{⍺←1 ⋄ r←1⊃160⌶⍵⋄⍺=1:r⋄⍬⍴2⊃⎕vfi r}
+ cfg←1⊃⎕NGET File
+ Exec←{
+     2≠≢i←⍸⍵.Match='⍎':'Two ⍎ symbols needed!'⎕SIGNAL 11
+     m←⍵.Match
+     '0'≡⍥,¯1↑¯1↓(i[1]↑m): ⍕⍎i[1]↓(i[2]-1)↑m   ⍝ return unqouted value
+     ((i[1]-1)↑m),(⍎i[1]↓(i[2]-1)↑m),i[2]↓m
+ }
+ ⍝ evaluate all ⍎ statements (Note: we will replace the entire string, so if you want a quotes result, make sure to include 'em!)
+ cfg←('((["''])0⍎(.*)⍎\2)'⎕R{0 Exec ⍵}⍠'Mode' 'L')cfg
+ cfg←('((["''])⍎(.*)⍎\2)'⎕R{Exec ⍵}⍠'Mode' 'L')cfg
+ res←0(⎕JSON⍠'Dialect' 'JSON5')cfg
+ res.File←File
+ res.(UTC←⊃13 ⎕NINFO File)
+ res←⎕JSON res

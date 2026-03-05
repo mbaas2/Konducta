@@ -1,0 +1,8 @@
+ FixEnvRefs←{
+     ⎕←'Match=',⍵.Match
+     txt←⍵.Block  ⍝ all text
+     var←⍵.((¯1+Lengths[6])↑(+/Offsets[⍳2])↓Block)
+     res←'''',(2 ⎕NQ'#' 'GetEnvironment'var),''''
+     ⎕←'Res=',res
+     res
+ }

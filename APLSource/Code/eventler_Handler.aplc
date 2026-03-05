@@ -1,0 +1,158 @@
+:class eventler_Handler
+    :field public txt_ns
+    :field public cfg
+    :field public CFG
+    :field public TheInstance
+
+    ∇ R←RMB R
+      :Access public
+      R←' '(1↓,⊢⍤/⍨1(⊢∨⌽)0,≠)R
+    ∇
+
+    ∇ txt←⍙ id;values;ns;i;replace⍙
+      :Access public
+⍝ return text with given id
+⍝ look in namespace for current language first, use "en" as fallback
+⍝ optionally may contain "fill values" for placeholders ("%" or "%1" etc.)
+      :If 1<|≡id
+          values←⍕¨1↓id
+          id←1⊃id
+      :Else
+          values←⍬
+      :EndIf
+      :If 2=(ns←⍎'#.Code.',txt_ns,'.',cfg.##.handler_cfg.lang).⎕NC id
+          txt←ns⍎id
+      :ElseIf 2=(ns←⍎'#.Code.',txt_ns,'.en').⎕NC id
+          txt←ns⍎id
+      :Else ⍝*** id not found!
+          ⎕←'⍙''',id,''' not found!'    ⍝ spit out info in session
+          txt←id              ⍝ return id as text
+      :EndIf
+     
+      :For i :In ⍳{0=≢⍵:0 ⋄ ≢⊆⍵}values
+          txt←(('%',⍕i)⎕R(i⊃values)⍠'Regex' 0)txt
+          :If 1=≢⊆values
+              txt←('%'⎕R(1⊃values)⍠'Regex' 0)txt
+          :EndIf
+      :EndFor
+     
+      ⍝ finally: check if there are any ⍙id⍙ sequences in the result and replace them with the text they refer to
+      ⍝ maybe: also allow ⍙%var⍙ to refer to envvars?
+      replace⍙←{
+          (1 ⎕C 2⊃⍵.Match)∊⎕A:⍙ 1↓¯1↓⍵.Match   ⍝ replace ⍙id⍙ with text of given id
+      }
+      :If '⍙'∊∊txt
+          txt←('⍙([^⍙]*)⍙'⎕R replace⍙)txt
+      :EndIf
+    ∇
+
+
+    ∇ z←Trash E
+      :Access public
+⍝ Event E is not relevant - move to trash
+      ⎕←'[Trash] unbekannter Absender: ',E.sender,' / Betreff: ',E.subject
+      3 ⎕MKDIR #.Home,'Data/trash/'  ⍝ make sure we have a trash folder
+      :If ~∨/{⎕NEXISTS #.Home,'Data/trash/',⍵}¨∊¨1↓¨⎕NPARTS¨E.(EventQueue_File Filename)
+          ⎕←'[Trash] verschiebe: ',E.EventQueue_File
+          ⎕←'[Trash] verschiebe: ',E.Filename
+          (#.Home,'Data/trash/')⎕NMOVE E.EventQueue_File
+          (#.Home,'Data/trash/')⎕NMOVE E.Filename
+      :Else
+          ⎕←'[Trash] Dateien bereits im Trash-Ordner, überspringe'
+      :EndIf
+      z←1
+    ∇
+
+    ∇ {r}←{lv_cat}Log msg;lv;cat;lvn;entry;f;ts;v
+      :Access public
+      ⍝ Append a JSON log entry to the daily log file in CFG.config.Folder
+      ⍝ lv_cat (optional left arg): 'LEVEL' or ('LEVEL' 'CAT')
+      ⍝   Levels: ERR WARN INFO DBG  |  Categories: SYS SUB ADM SMTP BOUNCE SEC
+      ⍝ msg: simple string, or (string email) 2-vector for subscriber audit entries
+      :If 0=⎕NC'lv_cat'
+          (lv cat)←'INFO' 'SYS'
+      :ElseIf 1<≡lv_cat
+          (lv cat)←2↑lv_cat,(⊂'SYS')
+      :Else
+          (lv cat)←lv_cat'SYS'
+      :EndIf
+      lvn←'ERR' 'WARN' 'INFO' 'DBG'⍳⊂lv  ⍝ 1=ERR 2=WARN 3=INFO 4=DBG
+      :If lvn≤1+{2=cfg.⎕NC ⍵:cfg⍎⍵ ⋄ 2}'log_level'
+          v←⎕TS
+          ts←(⍕v[1]),'-',(¯2↑'0',⍕v[2]),'-',(¯2↑'0',⍕v[3]),'T',(¯2↑'0',⍕v[4]),':',(¯2↑'0',⍕v[5]),':',(¯2↑'0',⍕v[6]),'.',(¯3↑'000',⍕v[7])
+          entry←⎕NS''
+          entry.(ts level cat)←ts lv cat
+          :If 1<≡msg  ⍝ (message email) 2-vector → structured subscriber entry
+              entry.msg←⊃msg ⋄ entry.email←2⊃msg
+          :Else
+              entry.msg←∊⍕msg
+          :EndIf
+          r←(⎕JSON⍠'Compact' 1)entry
+          :If 'ERR'≡lv
+          :OrIf {2=cfg.⎕NC ⍵:cfg⍎⍵ ⋄ 0}'log_console'
+              ⎕←r
+          :EndIf
+          f←CFG.config.Folder,'alisia-',(⍕v[1]),(¯2↑'0',⍕v[2]),(¯2↑'0',⍕v[3]),'.jsonl'
+          (⊂r)⎕NPUT f 2
+          :If cat≡'SUB'  ⍝ GDPR audit trail: also write to audit.jsonl
+              (⊂r)⎕NPUT(CFG.config.Folder,'audit.jsonl')2
+          :EndIf
+      :EndIf
+    ∇
+
+    ∇ txt←{days}GetLogs flt;offset;d;logf;rawlog
+      :Access public
+      ⍝ Collect log entries from the last {days - default and max=7} daily JSONL files and apply filter.
+      ⍝ flt: lowercase filter string — exact match on level (err/warn/info/dbg),
+      ⍝      category (sys/sub/adm/smtp/bounce/sec), or free-text substring.
+      ⍝ Returns nested vector of raw JSON strings, or ⍬ if nothing found.
+      txt←⍬
+      ⎕USING∪←⊂'System,System.Runtime'
+      :For offset :In ⌽0∪{6::6 ⋄ 0⌈6⌊⍎⍵}'days'
+          d←DateTime.Today.AddDays(-offset)
+          logf←CFG.config.Folder,'alisia-',(⍕d.Year),(¯2↑'0',⍕d.Month),(¯2↑'0',⍕d.Day),'.jsonl'
+          :If ~⎕NEXISTS logf ⋄ :Continue ⋄ :EndIf
+          rawlog←(⎕UCS 10)#.split(1⊃⎕NGET logf)~⎕UCS 13
+          txt←txt,((0<≢¨rawlog)/rawlog)
+      :EndFor
+      :If 0=≢txt ⋄ →0 ⋄ :EndIf
+      :If 0<≢flt
+          :If (⊂flt)∊'err' 'warn' 'info' 'dbg'
+              txt←(∨/¨(⊂'"level":"',flt,'"')⍷⍥⎕C¨txt)/txt
+          :ElseIf (⊂flt)∊'sys' 'sub' 'adm' 'smtp' 'bounce' 'sec'
+              txt←(∨/¨(⊂'"cat":"',flt,'"')⍷⍥⎕C¨txt)/txt
+          :Else
+              txt←(∨/¨(⊂flt)⍷⍥⎕C¨txt)/txt
+          :EndIf
+      :EndIf
+    ∇
+
+    ∇ r←d1 DateDiff d2;⎕USING;dt1;dt2
+      :Access public
+      ⍝ Return difference of Dyalog date numbers as (Days Hours Minutes).
+      ⍝ #TODO: calculate exact year difference (considering leap years)
+      ⎕USING←'System'
+      dt1←⎕NEW DateTime(⊃20 ¯1 ⎕DT d1)
+      dt2←⎕NEW DateTime(⊃20 ¯1 ⎕DT d2)
+      r←(dt1.Subtract dt2).(Days Hours Minutes)
+    ∇
+
+    ∇ ENDRULE nul
+      :Access public
+      ⎕SIGNAL 998  ⍝ end processing of current rule
+    ∇
+
+    ∇ z←IsDevUser email
+      :Access public
+      email←⊃⊆email  ⍝ handle possible nested case
+      z←(⊂⎕C #.getMaddr email)∊⊆#.Config.devs
+      'DBG' 'SYS'Log'IsDevUser, email=',email,' => ',⍕z
+    ∇
+
+∇ R←FirstWord R 
+    :Access public
+    R←RMB R
+    R←(¯1+R⍳' ')↑R
+    ∇
+        
+:endclass

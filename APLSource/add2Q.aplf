@@ -1,0 +1,13 @@
+ add2Q e;file;i
+
+ file←(⍕e.ticks),'_',e.cfg
+ :If ⎕NEXISTS Home,'Data/evq/',file,'.json5'
+     file←file,'#'
+     i←1
+     :While ⎕NEXISTS Home,'Data/evq/',file,(⍕i),'.json5'
+         i←i+1
+     :EndWhile
+     file←file,⍕i
+ :EndIf
+
+ (⊂(⎕JSON ⎕OPT('Dialect' 'JSON5')('Compact' 0)('HighRank' 'Split'))e)⎕NPUT Home,'Data/evq/',file,'.json5'

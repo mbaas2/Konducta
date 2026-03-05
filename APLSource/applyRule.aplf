@@ -1,0 +1,51 @@
+ Handler applyRule(r E);z;⍙;R;if;ac;∆
+⍝ ⍙←{Handler.⍙ ⍵}
+⍝  ⎕PATH←⍕Handler
+ :Trap 998  ⍝ handle "ENDRULE"
+     :For R :In ,r
+         z←0<≢R.if
+         :For if :In ⊆R.if
+             z∧←∆←⍎'Handler.{',if,'}E'
+             :If #.Config.debug _hasBitSet 2
+⍝                 (⎕LC[1]+3)⎕STOP 1⊃⎕SI
+                 ⎕←'tracerule:'
+                 ⎕←'if=',if,'  ==> ',(⍕∆),', z=',⍕z
+             :EndIf
+            'DBG' 'SYS'(⊃#.Triggers.handlers).Log'if=>',if,'<    ==> ',(⍕∆),', z=',⍕z
+
+         :EndFor
+         :If z
+             :If 9=R.⎕NC'then'    ⍝ if then is nested
+             :OrIf 2∊∊R.then{0::0 ⋄ ⍺.⎕NC ⍵}⊂'if'
+                 Handler applyRule R.then E
+             :Else
+                 :For ac :In ⊆R.then
+                     :If 9=⎕NC'ac'
+                     :OrIf 2∊∊ac{0::0 ⋄ ⍺.⎕NC ⍵}⊂'if'
+                         Handler applyRule ac E
+                     :Else
+                         :If #.Config.debug _hasBitSet 2
+                             ⎕←'Handler do ',ac,' E'
+                             (⎕LC[1]+2)⎕STOP 1⊃⎕SI
+                         :EndIf
+                         Handler do ac E
+                     :EndIf
+                 :EndFor
+             :EndIf
+         :ElseIf 0≠R.⎕NC'else'   ⍝ maybe we have an else part...
+             :If 9=R.⎕NC'else'
+             :OrIf 2∊∊R.else{0::0 ⋄ ⍺.⎕NC ⍵}⊂'if'
+                 Handler applyRule R.else E
+             :Else
+                 :For ac :In ⊆R.else
+                     :If 9=⎕NC'ac'
+                     :OrIf 2∊∊ac{0::0 ⋄ ⍺.⎕NC ⍵}⊂'if'
+                         Handler applyRule ac E
+                     :Else
+                         Handler do ac E
+                     :EndIf
+                 :EndFor
+             :EndIf
+         :EndIf
+     :EndFor
+ :EndTrap

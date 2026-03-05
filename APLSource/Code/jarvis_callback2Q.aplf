@@ -1,0 +1,14 @@
+res←l jarvis_callback2Q r;z;evnt
+⍝
+evnt←⎕ns''
+evnt.cfg←r.l
+evnt.origin←'jarvis'
+evnt.sender←r.e
+evnt.handler←r.h
+evnt.subject←r.s
+
+evnt.date←⊃'DD.MM.YYYY hh:mm:ss'(1200⌶)1 ⎕DT⊂⎕TS
+evnt.ticks←20⎕dt⊂⎕ts
+
+add2Q evnt
+res←'Your click has been registered. A response might be sent by email.'

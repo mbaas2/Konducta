@@ -1,0 +1,32 @@
+ Handler do(ac E);j;res;⎕TRAP
+ res←'N/A'
+ ⍝ TODO: find a better way to deal with optional result...
+ ⍝⎕trap←6'E' '→Exit'
+ :Trap 801 998,(#.Config.debug _hasBitSet 0)/0
+     Handler.E←E
+     ⍝c res←Handler⍎ac,' E'
+   ⍝  :Trap 85
+   ⍝      res←0 Handler.(85⌶)ac,' E'
+   ⍝  :Else
+   ⍝      ⎕←'no res'
+   ⍝  :EndTrap
+⍝     :If (11 Handler.⎕ATX ac)=0  ⍝ niladic ac   ⍝⍝ nicht gut wenn ac eine dfn ist! aber da res wohl nicht verwertet wird, können wir's vlt. ignorieren...
+     :If ac≡'ENDRULE'
+         ⎕SIGNAL 998
+     :Else
+         ⍎'Handler.',ac,'E'
+     :EndIf
+⍝     :Else
+⍝         res←0 Handler.(85⌶)ac,' E'
+⍝     :EndIf
+
+ :Else
+     :If ⎕EN∊801 998
+         ⎕SIGNAL ⎕EN   ⍝ pass-through the restart event
+     :Else
+         ⎕←(⎕JSON ⎕OPT'Compact' 0)⎕DMX
+         ∘∘∘
+     :EndIf
+ :EndTrap
+ ⎕←'res=',res
+Exit:
