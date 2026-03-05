@@ -11,32 +11,70 @@ handlers inherit from.
 
 ## Architecture
 
-```
-Konducata (this repo)          Alisia (handler repo)
-─────────────────────          ─────────────────────
-Run.aplf                       APLSource/Code/alisia.aplc
-procEvents.aplf         ←─→    APLSource/Code/alisia_texts/
-applyRule.aplf                 APLSource/Code/SMTP.dyalog
-eventler_Handler.aplc          APLSource/Code/GitHub.apln
-Triggers/email/email.aplc      HTML/
+```text
+Konducata (this repo)          Handler repos (pluggable)
+─────────────────────          ─────────────────────────
+Run.aplf                       Konducta-Alisia/APLSource/alisia.aplc
+procEvents.aplf         ←─→    Konducta-GitHub/APLSource/GitHubHandler.aplc
+applyRule.aplf                 ... (any custom handler)
+eventler_Handler.aplc
+LoadHandlerRepos.aplf
+ResolveHandler.aplf
+Triggers/email/email.aplc
 Jarvis.dyalog
 
         APLde-Konducata (config repo)
         ─────────────────────────────
-        Config/konducata.json5
-        Config/triggers.json5
+        Config/konducata.json5       ← handlerRepos configuration
+        Config/triggers.json5        ← handler references
         Config/rules.json5
-        Config/alisia_styles.json5
 ```
 
 ## Environment Variables
 
-| Variable          | Description                                      |
-|-------------------|--------------------------------------------------|
-| `KONDUCATA_HOME`  | Root directory (contains Config/, Data/, HTML/)  |
-| `ALISIA_HOME`     | Root of the Alisia repo (optional; loads handler)|
+| Variable          | Description                                     |
+|-------------------|-------------------------------------------------|
+| `KONDUCATA_HOME`  | Root directory (contains Config/, Data/, HTML/) |
+
+## Handler Configuration
+
+Konducata supports modular handler loading. Configure handler repositories in `Config/konducata.json5`:
+
+```json5
+{
+  "version": "1.0",
+  "handlerRepos": [
+    {
+      "name": "alisia",
+      "path": "C:/Git/Konducta-Alisia/",
+      "namespace": "#.Handlers.Alisia"
+    },
+    {
+      "name": "github",
+      "path": "C:/Git/Konducta-GitHub/",
+      "namespace": "#.Handlers.GitHub"
+    }
+  ]
+}
+```
+
+**Note:** All handler repos must have `APLSource/` structure. Use `⍎Env 'VAR_NAME'⍎` in path to reference environment variables via `readConfig`.
+
+Reference handlers in `Config/triggers.json5` using `"RepoName.ClassName"`:
+
+```json5
+{
+  "myMailTrigger": {
+    "type": "email",
+    "handler": "Alisia.alisia",
+    "handler_cfg": {...}
+  }
+}
+```
 
 ## Related Repos
 
-- **Alisia** — List server handler application
+- **Konducta-Alisia** — List server handler (pluggable via `handlerRepos`)
+- **Konducta-GitHub** — GitHub webhook handler (pluggable via `handlerRepos`)
 - **APLde-Konducata** — Deployment configuration for APL Germany
+- **Custom handlers** — Any handler implementing `eventler_Handler` base class

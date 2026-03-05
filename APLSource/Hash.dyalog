@@ -35,21 +35,22 @@
           :EndSelect
       :EndIf
       :If CongaVersion≡''   ⍝ if no specific version is required
-          CongaVersion←⊃('34' '35')[2-'18'≡2↑2⊃'.'⎕WG'APLVersion']
+          CongaVersion←⊃('34' '35' '36' '**')[18 19 20⍳2⊃⎕vfi 2↑2⊃'.'⎕WG'APLVersion']
+          'Cannot determine Conga-Version'⎕signal( CongaVersion≡'**' )/11
       :EndIf
       ∆sharedlib←('{CongaVersion}'⎕R CongaVersion)∆sharedlib
-      ⎕←'pre=',pre
-      ⎕←'pre2=',pre2
+      ⍝ ⎕←'pre=',pre
+      ⍝ ⎕←'pre2=',pre2
       :If 0=≢pre
           pre←pre2
       :EndIf
-      ⎕←'pre=',pre
-      ⎕←'∆sharedlib=',∆sharedlib
+      ⍝ ⎕←'pre=',pre
+      ⍝ ⎕←'∆sharedlib=',∆sharedlib
       R←pre,∆sharedlib
       :If ' '∊R
           R←'"',R,'"'
       :EndIf
-      ⎕←'sharedlib=',R
+      ⍝ ⎕←'sharedlib=',R
     ∇
 
     ∇ r←name ∆init size;name

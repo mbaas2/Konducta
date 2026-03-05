@@ -20,9 +20,9 @@
       :Else
           values←⍬
       :EndIf
-      :If 2=(ns←⍎'#.Code.',txt_ns,'.',cfg.##.handler_cfg.lang).⎕NC id
+      :If 2=(ns←⍎'#.',txt_ns,'.',cfg.##.handler_cfg.lang).⎕NC id
           txt←ns⍎id
-      :ElseIf 2=(ns←⍎'#.Code.',txt_ns,'.en').⎕NC id
+      :ElseIf 2=(ns←⍎'#.',txt_ns,'.en').⎕NC id
           txt←ns⍎id
       :Else ⍝*** id not found!
           ⎕←'⍙''',id,''' not found!'    ⍝ spit out info in session

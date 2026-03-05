@@ -1,0 +1,13 @@
+ ResolveHandler←{
+⍝ Resolve handler name to class reference
+⍝ ⍵ = handler string in format "RepoName.ClassName"
+⍝ Returns: class reference
+     parts←('.'∘≠⊆⊢)⍵
+     
+⍝ Handler must be in format "RepoName.ClassName"
+     2≠≢parts:⎕SIGNAL/('Handler format must be "RepoName.ClassName": ',⍵)11
+     repo cls←parts
+     nspath←'#.Handlers.',repo,'.',cls
+     0=#.⎕NC nspath:⎕SIGNAL/('Handler class not found: ',nspath)11
+     ⍎nspath
+ }

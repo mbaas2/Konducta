@@ -5,11 +5,8 @@
  ⎕SE.SESSIONSTART←'*** Konducata *** ',⍕⎕TS
  Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCATA_HOME'
  ⎕←'Home=',Home
- ⍝ Load handler code from ALISIA_HOME (separate repo) if set, else fall back to Home
- :If 0<≢AHome←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'ALISIA_HOME'
-     ⎕SE.Link.Import '#.Code' AHome,'APLSource/Code'
-     ⎕←'Alisia loaded from ALISIA_HOME=',AHome
- :EndIf
+
+
  :If 0=#.⎕NC'launchTS'
      #.launchTS←20 ⎕DT⊂⎕TS
  :EndIf
@@ -26,14 +23,21 @@
  ⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
 
  '#.Triggers'⎕NS''
- rules←⎕JSON Code.readConfig Home,'Config/rules.json5'
- #.Triggers.Config←⎕JSON Code.readConfig Home,'Config/triggers.json5'   ⍝ read config file
- #.Config←⎕JSON Code.readConfig Home,'Config/konducata.json5'   ⍝ read config file
+ rules←⎕JSON readConfig Home,'Config/rules.json5'
+ #.Triggers.Config←⎕JSON readConfig Home,'Config/triggers.json5'   ⍝ read config file
+ #.Config←⎕JSON readConfig Home,'Config/konducata.json5'   ⍝ read config file
  Trapping←#.Config{6::0 ⋄ ⍺⍎⍵}'Trapping'
+
+ ⍝ Load handler repositories from config (new modular approach)
+ :If 2=#.Config.⎕NC'handlerRepos'
+ :AndIf 0<≢#.Config.handlerRepos
+     LoadHandlerRepos #.Config.handlerRepos
+ :EndIf
 
  jarvis_callbacks←⍬
  check_freq←⌊/⍬
  #.Triggers.(list instances handlers)←⊂⍬
+ '#.Triggers.handlerMap'⎕NS''
  :For ns :In #.Triggers.Config.⎕NL ¯9
      ⎕←'setup ',ns
 ⍝     ∘∘∘
@@ -43,9 +47,11 @@
          ref←Triggers.Config.⍎ns
          3 ⎕MKDIR ⎕←ref.config.Folder  ⍝ be sure that Folder exists
          hdl←ref.handler
-         ⎕←'Handler = ⎕NEW ',(#.Code⍎hdl),'(ref.handler_cfg ns ref)'
-         hdl←⎕NEW(#.Code⍎hdl)(ref.handler_cfg ns ref)
+         hdlClass←ResolveHandler hdl  ⍝ Resolve handler (supports both "RepoName.ClassName" and legacy "ClassName")
+         ⎕←'Handler = ⎕NEW ',hdlClass,'(ref.handler_cfg ns ref)'
+         hdl←⎕NEW hdlClass(ref.handler_cfg ns ref)
          #.Triggers.handlers,←hdl
+         ⍎'#.Triggers.handlerMap.',ns,'←hdl'
          cls←('#.Triggers.'{⍺,⍵,'.',⍵}' '~⍨⍕ref.type)
          ⎕←'Instanz'
          #.Triggers.list←⊂⎕←'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
@@ -67,7 +73,7 @@
      '#.CodeLocation'⎕NS''
 
 ⍝ and create those callback-functions
-     #.CodeLocation.⎕FX¨{('∇r←{l} ',⍵,' r')'l #.Code.jarvis_callback2Q r' '∇'}¨jarvis_callbacks
+     #.CodeLocation.⎕FX¨{3=#.⎕NC ⍵:⎕NR'#.',⍵ ⋄ ('∇r←{l} ',⍵,' r')'l #.jarvis_callback2Q r' '∇'}¨jarvis_callbacks
 
 ⍝ and configure it
      'JarvisConfig'⎕NS''
@@ -80,7 +86,7 @@
      JarvisConfig.AllowGETs←1  ⍝ allow calling endpoints with Http-GET
      JarvisConfig.Debug←#.Triggers.Config'JarvisDebug'{0=(1⊃⍺).⎕NC 2⊃⍺:⍵ ⋄ ⍎/⍺}0
 ⍝ should add ValidateRequest and check for some credentials to make it harder to hack
-     #.jarvis←#.Code.Jarvis.New JarvisConfig
+     #.jarvis←#.Jarvis.New JarvisConfig
      :If 0≠⊃⎕←#.jarvis.Start
          ∘∘∘
      :EndIf
@@ -116,12 +122,12 @@
                  procEvents
                  ref←Triggers.Config⍎ns
                  :If #.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
-                     #.Config←⎕JSON #.Code.readConfig Home,'Config/konducata.json5'
+                     #.Config←⎕JSON #.readConfig Home,'Config/konducata.json5'
                      'INFO' 'SYS'Handler.Log #.Config.file,' updated, re-reading...'
                  :EndIf
                  :If #.Triggers.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
                      'INFO' 'SYS'Handler.Log #.Triggers.Config.file,' updated, re-reading...'
-                     #.Triggers.Config←⎕JSON #.Code.readConfig Home,'Config/triggers.json5'   ⍝ read config file
+                     #.Triggers.Config←⎕JSON #.readConfig Home,'Config/triggers.json5'   ⍝ read config file
                      :For ns :In #.Triggers.Config.⎕NL ¯9
                          :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
                              ⍎'#.Triggers.Config.',ns,'.config.id←ns'
@@ -131,7 +137,7 @@
                  :EndIf
                  :If rules.(UTC<⊃13 ⎕NINFO File)
                      'INFO' 'SYS'Handler.Log rules.file,' updated, re-reading...'
-                     rules←⎕JSON #.Code.readConfig Home,'Config/rules.json5'
+                     rules←⎕JSON #.readConfig Home,'Config/rules.json5'
                  :EndIf
                  :If #.Config.debug _hasBitSet 3
                      (⎕LC[1]+1)⎕STOP 1⊃⎕SI

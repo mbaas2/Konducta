@@ -10,7 +10,7 @@
      :For n :In rules.⎕NL ¯9
          R←rules⍎n
         ⍝ check if a rule applies...
-         Handler applyRule R E
+         (#.Triggers.handlerMap⍎E.cfg) applyRule R E
      :EndFor
      :if ~#.Config.debug _hasBitSet 4
      :andif ⎕nexists f
