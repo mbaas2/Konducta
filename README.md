@@ -116,4 +116,12 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 4. Tag: `git tag -a v1.1.0 -m "Release v1.1.0: Description"`
 5. Push: `git push && git push --tags`
 
+**Version behavior:**
+```apl
+]load Konducata
+Version ''                    ⍝ On tag v1.0.0:     "1.0.0"
+                              ⍝ After 3 commits:   "1.0.0-dev+a3f5c2b"
+                              ⍝ On tag v1.1.0:     "1.1.0"
+```
+
 Handler repositories (Konducta-Alisia, Konducta-GitHub) follow the same versioning scheme.
