@@ -1,0 +1,21 @@
+{
+  // Template only: copy to $KONDUCATA_HOME/Config/konducata.json5
+  "version": "1.0",
+
+  // Optional runtime behavior flags
+  "Trapping": 1,
+
+  // Pluggable handler repositories
+  "handlerRepos": [
+    {
+      "name": "alisia",
+      "path": "C:/Git/Konducta-Alisia/",
+      "namespace": "#.Handlers.Alisia"
+    },
+    {
+      "name": "github",
+      "path": "C:/Git/Konducta-GitHub/",
+      "namespace": "#.Handlers.GitHub"
+    }
+  ]
+}

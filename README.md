@@ -38,7 +38,19 @@ Jarvis.dyalog
 
 ## Handler Configuration
 
-Konducata supports modular handler loading. Configure handler repositories in `Config/konducata.json5`:
+Konducata supports modular handler loading.
+The runtime reads `Config/konducata.json5` under `KONDUCATA_HOME`.
+In practice, this file is usually maintained in the `APLde-Konducata` repo (deployment/config repo), not in this core repo.
+
+Canonical location:
+
+- `$KONDUCATA_HOME/Config/konducata.json5`
+
+Template in this repo:
+
+- `Config/konducata.template.json5`
+
+Example content:
 
 ```json5
 {
@@ -59,6 +71,9 @@ Konducata supports modular handler loading. Configure handler repositories in `C
 ```
 
 **Note:** All handler repos must have `APLSource/` structure. Use `⍎Env 'VAR_NAME'⍎` in path to reference environment variables via `readConfig`.
+
+This repository does not track active deployment-specific `Config/*.json5` files.
+It provides `Config/konducata.template.json5` as a schema/example only.
 
 Reference handlers in `Config/triggers.json5` using `"RepoName.ClassName"`:
 
