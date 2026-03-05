@@ -21,7 +21,7 @@ Jarvis.dyalog
 
         APLde-Konducata (config repo)
         ─────────────────────────────
-        Config/eventler.json5
+        Config/konducata.json5
         Config/triggers.json5
         Config/rules.json5
         Config/alisia_styles.json5

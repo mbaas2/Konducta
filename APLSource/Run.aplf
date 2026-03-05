@@ -28,7 +28,7 @@
  '#.Triggers'⎕NS''
  rules←⎕JSON Code.readConfig Home,'Config/rules.json5'
  #.Triggers.Config←⎕JSON Code.readConfig Home,'Config/triggers.json5'   ⍝ read config file
- #.Config←⎕JSON Code.readConfig Home,'Config/eventler.json5'   ⍝ read config file
+ #.Config←⎕JSON Code.readConfig Home,'Config/konducata.json5'   ⍝ read config file
  Trapping←#.Config{6::0 ⋄ ⍺⍎⍵}'Trapping'
 
  jarvis_callbacks←⍬
@@ -116,7 +116,7 @@
                  procEvents
                  ref←Triggers.Config⍎ns
                  :If #.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
-                     #.Config←⎕JSON #.Code.readConfig Home,'Config/eventler.json5'
+                     #.Config←⎕JSON #.Code.readConfig Home,'Config/konducata.json5'
                      'INFO' 'SYS'Handler.Log #.Config.file,' updated, re-reading...'
                  :EndIf
                  :If #.Triggers.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
