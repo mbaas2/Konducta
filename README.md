@@ -4,6 +4,8 @@ Event-driven automation framework written in Dyalog APL.
 
 ![Konducta Logo](./konducta.svg)
 
+**Current Version:** 1.0.0 ([CHANGELOG](CHANGELOG.md))
+
 Konducata monitors event sources (e.g. email via POP3), evaluates a rule set, and
 dispatches events to handler applications. It provides the runtime, rule engine,
 Jarvis web server integration, and the `eventler_Handler` base class that all
@@ -93,3 +95,23 @@ Reference handlers in `Config/triggers.json5` using `"RepoName.ClassName"`:
 - **Konducta-GitHub** — GitHub webhook handler (pluggable via `handlerRepos`)
 - **APLde-Konducata** — Deployment configuration for APL Germany
 - **Custom handlers** — Any handler implementing `eventler_Handler` base class
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
+
+**Version information:**
+- `VERSION` file - Current version (plain text)
+- `Version.aplf` - APL function to read version at runtime
+- `CHANGELOG.md` - Release history and notable changes
+- Git tags - `v1.0.0` format for each release
+
+**Creating a new release:**
+
+1. Update `VERSION` file (e.g., `1.1.0`)
+2. Document changes in `CHANGELOG.md`
+3. Commit: `git commit -m "Release v1.1.0"`
+4. Tag: `git tag -a v1.1.0 -m "Release v1.1.0: Description"`
+5. Push: `git push && git push --tags`
+
+Handler repositories (Konducta-Alisia, Konducta-GitHub) follow the same versioning scheme.
