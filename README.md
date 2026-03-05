@@ -103,6 +103,8 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 **Version information:**
 - `VERSION` file - Current version (plain text)
 - `Version.aplf` - APL function to read version at runtime
+  - On tagged release: returns clean version (e.g., `"1.0.0"`)
+  - In development: appends git SHA (e.g., `"1.0.0-dev+a3f5c2b"`)
 - `CHANGELOG.md` - Release history and notable changes
 - Git tags - `v1.0.0` format for each release
 

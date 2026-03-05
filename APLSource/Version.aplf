@@ -1,5 +1,7 @@
  Version←{
 ⍝ Returns Konducata version from VERSION file
+⍝ In development: appends -dev+SHA (e.g., "1.0.0-dev+a3f5c2b")
+⍝ On tagged release: clean version (e.g., "1.0.0")
 ⍝ ⍵: optional path to repo root (default: current #.Home)
      path←{0=⎕NC'⍵':'' ⋄ ⍵}⍵
      :If 0=≢path
@@ -8,7 +10,25 @@
      :EndIf
      vfile←path,'VERSION'
      :If ⎕NEXISTS vfile
-         ⊃⎕NGET vfile 1
+         base←⊃⎕NGET vfile 1
+         ⍝ Check if we're on a tagged release
+         :Trap 0
+             tag←⊃⎕SH'cd "',path,'" && git describe --exact-match --tags 2>nul'
+             :If 0<≢tag
+                 :Return base  ⍝ On tag: return clean version
+             :EndIf
+         :EndTrap
+         ⍝ Development: append git SHA
+         :Trap 0
+             sha←⊃⎕SH'cd "',path,'" && git rev-parse --short HEAD 2>nul'
+             :If 0<≢sha
+                 base,'-dev+',sha
+             :Else
+                 base
+             :EndIf
+         :Else
+             base
+         :EndTrap
      :Else
          'unknown'
      :EndIf
