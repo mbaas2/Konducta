@@ -2,6 +2,8 @@
 
 Event-driven automation framework written in Dyalog APL.
 
+![Konducta Logo](./konducta.svg)
+
 Konducata monitors event sources (e.g. email via POP3), evaluates a rule set, and
 dispatches events to handler applications. It provides the runtime, rule engine,
 Jarvis web server integration, and the `eventler_Handler` base class that all
@@ -13,7 +15,7 @@ handlers inherit from.
 Konducata (this repo)          Alisia (handler repo)
 ─────────────────────          ─────────────────────
 Run.aplf                       APLSource/Code/alisia.aplc
-procEvents.aplf         ←─→   APLSource/Code/alisia_texts/
+procEvents.aplf         ←─→    APLSource/Code/alisia_texts/
 applyRule.aplf                 APLSource/Code/SMTP.dyalog
 eventler_Handler.aplc          APLSource/Code/GitHub.apln
 Triggers/email/email.aplc      HTML/

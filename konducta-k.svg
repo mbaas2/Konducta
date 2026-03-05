@@ -1,0 +1,6 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- K shape with flow lines branching out -->
+  <line x1="8" y1="5" x2="8" y2="25" stroke="#3a8ef6" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="8" y1="15" x2="22" y2="6" stroke="#3a8ef6" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="8" y1="15" x2="22" y2="24" stroke="#3a8ef6" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
