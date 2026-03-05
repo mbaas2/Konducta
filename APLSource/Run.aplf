@@ -2,9 +2,14 @@
 ⍝ Initialises eventler and starts the main "listinging loop"
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
- ⎕SE.SESSIONSTART←'*** eventler *** ',⍕⎕TS
- Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'EVENTLER_HOME'
+ ⎕SE.SESSIONSTART←'*** Konducata *** ',⍕⎕TS
+ Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCATA_HOME'
  ⎕←'Home=',Home
+ ⍝ Load handler code from ALISIA_HOME (separate repo) if set, else fall back to Home
+ :If 0<≢AHome←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'ALISIA_HOME'
+     ⎕SE.Link.Import '#.Code' AHome,'APLSource/Code'
+     ⎕←'Alisia loaded from ALISIA_HOME=',AHome
+ :EndIf
  :If 0=#.⎕NC'launchTS'
      #.launchTS←20 ⎕DT⊂⎕TS
  :EndIf
