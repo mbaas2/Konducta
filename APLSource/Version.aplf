@@ -1,0 +1,15 @@
+ Version←{
+⍝ Returns Konducata version from VERSION file
+⍝ ⍵: optional path to repo root (default: current #.Home)
+     path←{0=⎕NC'⍵':'' ⋄ ⍵}⍵
+     :If 0=≢path
+     :AndIf 9=#.⎕NC'Home'
+         path←#.Home
+     :EndIf
+     vfile←path,'VERSION'
+     :If ⎕NEXISTS vfile
+         ⊃⎕NGET vfile 1
+     :Else
+         'unknown'
+     :EndIf
+ }

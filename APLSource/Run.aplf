@@ -93,7 +93,7 @@
      #.JARVIS_URL←'http://',#.Triggers.Config.JarvisHost,((#.Triggers.Config.JarvisPort≠80)/':',(⍕#.Triggers.Config.JarvisPort)),'/'
  :EndIf
 
- 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Eventler version ',#.Config.version
+ 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducata v',Version Home
 
 ⍝ aktualisierung triggers umschreiben!!! (entweder anfang oder ende, aber nicht 2*!)
 ⍝ update list of events
