@@ -123,7 +123,11 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
      #.JARVIS_URL←'http://',#.Triggers.Config.JarvisHost,((#.Triggers.Config.JarvisPort≠80)/':',(⍕#.Triggers.Config.JarvisPort)),'/'
  :EndIf
 
- 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducta v',Version Home
+ codeDir←EnsureSlash 2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_ROOT'
+ :If 0=≢codeDir
+     codeDir←Home
+ :EndIf
+ 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducta v',Version codeDir
 
 ⍝ aktualisierung triggers umschreiben!!! (entweder anfang oder ende, aber nicht 2*!)
 ⍝ update list of events
