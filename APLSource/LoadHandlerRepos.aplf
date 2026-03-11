@@ -15,13 +15,9 @@
          :If 0=⎕NC ns  ⍝ Check if namespace already exists
              ns ⎕NS''
              ⎕SE.Link.Import ns(path,'APLSource')
-             ⍎ns,'.Home←''',#.Home,''''
              ⍎ns,'.RepoPath←''',path,''''
              ⎕←'Handler repo "',repo.name,'" loaded into ',ns,' from ',path,'APLSource'
          :Else
-             :If 0=(⍎ns).⎕NC'Home'
-                 ⍎ns,'.Home←''',#.Home,''''
-             :EndIf
              :If 0=(⍎ns).⎕NC'RepoPath'
                  ⍎ns,'.RepoPath←''',path,''''
              :EndIf
