@@ -26,7 +26,7 @@ found←⍬
  :For repo :In repos
       repoNs←⍎'#.Handlers.',repo
       members←repoNs.⎕NL ¯9 ¯2
-      hits←(⊂⎕C cls)=⎕C¨members
+     hits←(⊂⎕C cls)≡¨⎕C members
       :If ∨/hits
            :For m :In hits/members
                 found,←⊂'#.Handlers.',repo,'.',m
