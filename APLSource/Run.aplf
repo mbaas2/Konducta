@@ -1,10 +1,21 @@
- Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping
+Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash
 ⍝ Initialises eventler and starts the main "listinging loop"
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
- ⎕SE.SESSIONSTART←'*** Konducata *** ',⍕⎕TS
- Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCATA_HOME'
+ ⎕SE.SESSIONSTART←'*** Konducta *** ',⍕⎕TS
+Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'Konducta_ROOT'
+ #.Home←Home
  ⎕←'Home=',Home
+
+ EnsureSlash←{0=≢⍵:'' ⋄ ⍵,(~⍵[≢⍵]∊'\/')/'/'}
+ cfgEnv←2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_CONFIG'
+ ConfigRoot←EnsureSlash cfgEnv
+ :If 0=≢ConfigRoot
+     ConfigRoot←Home,'Config/'
+ :EndIf
+ #.ConfigRoot←ConfigRoot
+ (cfgRulesFile cfgTriggersFile cfgMainFile)←ConfigRoot∘,¨'rules.json5' 'triggers.json5' 'Konducta.json5'
+ ⎕←'ConfigRoot=',ConfigRoot
 
 
  :If 0=#.⎕NC'launchTS'
@@ -22,16 +33,22 @@
  :EndIf
  ⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
 
- '#.Triggers'⎕NS''
- rules←⎕JSON readConfig Home,'Config/rules.json5'
- #.Triggers.Config←⎕JSON readConfig Home,'Config/triggers.json5'   ⍝ read config file
- #.Config←⎕JSON readConfig Home,'Config/konducata.json5'   ⍝ read config file
+
+
+ rules←⎕JSON readConfig cfgRulesFile
+ #.Triggers.Config←⎕JSON readConfig cfgTriggersFile   ⍝ read config file
+ #.Config←⎕JSON readConfig cfgMainFile   ⍝ read config file
+ :If 3=#.⎕NC'ApplySecretsIfChanged'
+     {}ApplySecretsIfChanged ⍬
+ :EndIf
  Trapping←#.Config{6::0 ⋄ ⍺⍎⍵}'Trapping'
 
  ⍝ Load handler repositories from config (new modular approach)
  :If 2=#.Config.⎕NC'handlerRepos'
  :AndIf 0<≢#.Config.handlerRepos
      LoadHandlerRepos #.Config.handlerRepos
+     :else
+     ⎕←'"handlerRepos" not found in config or empty, skipping loading handler repositories'
  :EndIf
 
  jarvis_callbacks←⍬
@@ -47,7 +64,7 @@
          ref←Triggers.Config.⍎ns
          3 ⎕MKDIR ⎕←ref.config.Folder  ⍝ be sure that Folder exists
          hdl←ref.handler
-         hdlClass←ResolveHandler hdl  ⍝ Resolve handler (supports both "RepoName.ClassName" and legacy "ClassName")
+         hdlClass←ResolveHandler hdl
          ⎕←'Handler = ⎕NEW ',hdlClass,'(ref.handler_cfg ns ref)'
          hdl←⎕NEW hdlClass(ref.handler_cfg ns ref)
          #.Triggers.handlers,←hdl
@@ -57,6 +74,7 @@
          #.Triggers.list←⊂⎕←'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
          #.Triggers.instances,←r2←⍎⊃¯1↑#.Triggers.list
          hdl.TheInstance←r2
+         r2.Loc←ns
          check_freq←check_freq⌊ref{6::⌊/⍬ ⋄ ⍎'⍺.',⍵}'check_freq_secs'
          :If 2=ref.⎕NC'jarvis_callbacks'
          :AndIf 0<≢ref.jarvis_callbacks
@@ -68,6 +86,16 @@
      :EndIf
  :EndFor
 
+ :If 3=#.⎕NC'secret_update'
+ :AndIf ~(⊂'secret_update')∊jarvis_callbacks
+     jarvis_callbacks,←⊂'secret_update'
+ :EndIf
+
+:If 3=#.⎕NC'secret_update_confirm'
+:AndIf ~(⊂'secret_update_confirm')∊jarvis_callbacks
+    jarvis_callbacks,←⊂'secret_update_confirm'
+:EndIf
+
  :If 0<≢jarvis_callbacks
 ⍝ we need Jarvis! so lets launch it
      '#.CodeLocation'⎕NS''
@@ -78,7 +106,7 @@
 ⍝ and configure it
      'JarvisConfig'⎕NS''
      JarvisConfig.CodeLocation←#.CodeLocation
-     JarvisConfig.Port←#.Triggers.Config.JarvisPort
+     JarvisConfig.(Port Secure)←#.Triggers.Config.(JarvisPort,{6::0 ⋄ ⍎w}'JarvisSecure')
      JarvisConfig.Paradigm←'JSON'
      JarvisConfig.HTMLInterface←Home,'HTML/'
      JarvisConfig.HTMLDefaultPage←''
@@ -93,7 +121,7 @@
      #.JARVIS_URL←'http://',#.Triggers.Config.JarvisHost,((#.Triggers.Config.JarvisPort≠80)/':',(⍕#.Triggers.Config.JarvisPort)),'/'
  :EndIf
 
- 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducata v',Version Home
+ 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducta v',Version Home
 
 ⍝ aktualisierung triggers umschreiben!!! (entweder anfang oder ende, aber nicht 2*!)
 ⍝ update list of events
@@ -122,12 +150,12 @@
                  procEvents
                  ref←Triggers.Config⍎ns
                  :If #.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
-                     #.Config←⎕JSON #.readConfig Home,'Config/konducata.json5'
-                     'INFO' 'SYS'Handler.Log #.Config.file,' updated, re-reading...'
+                     #.Config←⎕JSON #.readConfig cfgMainFile
+                     'INFO' 'SYS'Handler.Log #.Config.File,' updated, re-reading...'
                  :EndIf
                  :If #.Triggers.Config.(UTC<⊃13 ⎕NINFO File)  ⍝ check if config was updated so that we need to re-read the files...
-                     'INFO' 'SYS'Handler.Log #.Triggers.Config.file,' updated, re-reading...'
-                     #.Triggers.Config←⎕JSON #.readConfig Home,'Config/triggers.json5'   ⍝ read config file
+                     'INFO' 'SYS'Handler.Log #.Triggers.Config.File,' updated, re-reading...'
+                     #.Triggers.Config←⎕JSON #.readConfig cfgTriggersFile   ⍝ read config file
                      :For ns :In #.Triggers.Config.⎕NL ¯9
                          :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
                              ⍎'#.Triggers.Config.',ns,'.config.id←ns'
@@ -137,7 +165,10 @@
                  :EndIf
                  :If rules.(UTC<⊃13 ⎕NINFO File)
                      'INFO' 'SYS'Handler.Log rules.file,' updated, re-reading...'
-                     rules←⎕JSON #.readConfig Home,'Config/rules.json5'
+                     rules←⎕JSON #.readConfig cfgRulesFile
+                 :EndIf
+                 :If 3=#.⎕NC'ApplySecretsIfChanged'
+                     {}ApplySecretsIfChanged ⍬
                  :EndIf
                  :If #.Config.debug _hasBitSet 3
                      (⎕LC[1]+1)⎕STOP 1⊃⎕SI

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Konducata will be documented in this file.
+All notable changes to Konducta will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `LoadHandlerRepos.aplf` - Dynamic handler loading from separate repos
 - `ResolveHandler.aplf` - Handler namespace resolution
 - `VERSION` file and `Version.aplf` for version tracking
-- `Config/konducata.template.json5` - Configuration template
+- `Config/Konducta.template.json5` - Configuration template
 - Flat APLSource structure (removed Code/ subdirectory)
 
 ### Changed
-- Renamed from "Eventler" to "Konducata"
+- Renamed from "Eventler" to "Konducta"
 - Handler repos must have `APLSource/` structure (not `APLSource/Code/`)
 - Handlers referenced as `"RepoName.ClassName"` format
 - Core files moved from `APLSource/Code/` to `APLSource/`

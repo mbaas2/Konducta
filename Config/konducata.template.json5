@@ -1,6 +1,20 @@
 {
-  // Template only: copy to $KONDUCATA_HOME/Config/konducata.json5
+  // Template only: copy to $Konducta_ROOT/Config/Konducta.json5
   "version": "1.0",
+
+  // Token used by Jarvis endpoint /secret_update (remote secret updates)
+  "secret_update_token": "CHANGE-ME-LONG-RANDOM-TOKEN",
+
+  // Confirmation receiver for staged secret updates
+  "secret_update_confirm_to": "admin@example.com",
+
+  // SMTP used to send secret update confirmation mail
+  "secret_update_smtp_server": "smtp.example.com",
+  "secret_update_smtp_port": 587,
+  "secret_update_smtp_secure": 1,
+  "secret_update_smtp_user": "smtp-user@example.com",
+  "secret_update_smtp_pswd": "CHANGE-ME",
+  "secret_update_smtp_from": "Konducta@example.com",
 
   // Optional runtime behavior flags
   "Trapping": 1,

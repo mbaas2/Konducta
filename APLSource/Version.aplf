@@ -1,35 +1,35 @@
- Version←{
-⍝ Returns Konducata version from VERSION file
+ R←Version w;base;sha;tag;path;vfile
+⍝ Returns Konducta version from VERSION file
 ⍝ In development: appends -dev+SHA (e.g., "1.0.0-dev+a3f5c2b")
 ⍝ On tagged release: clean version (e.g., "1.0.0")
 ⍝ ⍵: optional path to repo root (default: current #.Home)
-     path←{0=⎕NC'⍵':'' ⋄ ⍵}⍵
-     :If 0=≢path
-     :AndIf 9=#.⎕NC'Home'
-         path←#.Home
-     :EndIf
-     vfile←path,'VERSION'
-     :If ⎕NEXISTS vfile
-         base←⊃⎕NGET vfile 1
+ path←{0=⎕NC'⍵':'' ⋄ ⍵}w
+ :If 0=≢path
+ :AndIf 9=#.⎕NC'Home'
+     path←#.Home
+ :EndIf
+ vfile←path,'VERSION'
+ :If ⎕NEXISTS vfile
+     base←⊃⎕NGET vfile 1
          ⍝ Check if we're on a tagged release
-         :Trap 0
-             tag←⊃⎕SH'cd "',path,'" && git describe --exact-match --tags 2>nul'
-             :If 0<≢tag
-                 :Return base  ⍝ On tag: return clean version
-             :EndIf
-         :EndTrap
+     :Trap 0
+         tag←⊃⎕SH'cd "',path,'" && git describe --exact-match --tags 2>nul'
+         :If 0<≢tag
+             R←base  ⍝ On tag: return clean version
+             →0
+         :EndIf
+     :EndTrap
          ⍝ Development: append git SHA
-         :Trap 0
-             sha←⊃⎕SH'cd "',path,'" && git rev-parse --short HEAD 2>nul'
-             :If 0<≢sha
-                 base,'-dev+',sha
-             :Else
-                 base
-             :EndIf
+     :Trap 0
+         sha←⊃⎕SH'cd "',path,'" && git rev-parse --short HEAD 2>nul'
+         :If 0<≢sha
+             R←base,'-dev+',sha
          :Else
-             base
-         :EndTrap
+             R←base
+         :EndIf
      :Else
-         'unknown'
-     :EndIf
- }
+         R←base
+     :EndTrap
+ :Else
+     R←'N/A'
+ :EndIf

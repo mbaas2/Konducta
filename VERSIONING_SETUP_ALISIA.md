@@ -59,11 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flat APLSource structure
 
 ### Changed
-- Extracted from Konducata core repository
+- Extracted from Konducta core repository
 - Now loaded via `handlerRepos` configuration
 
 ## [0.x.x] - Historic
-- Part of Konducata/Eventler monolithic structure
+- Part of Konducta/Eventler monolithic structure
 ```
 
 ### 4. README.md Update
@@ -82,7 +82,7 @@ This handler follows [Semantic Versioning](https://semver.org/).
 - `Version.aplf` - APL function to read version
 - `CHANGELOG.md` - Release notes
 
-See main [Konducata repository](https://github.com/your-org/Konducata) for versioning guidelines.
+See main [Konducta repository](https://github.com/your-org/Konducta) for versioning guidelines.
 ```
 
 ## Git Commands

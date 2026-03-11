@@ -1,5 +1,5 @@
 :class email
-    :field public ns  ⍝ will be set by during Init
+    :field public ns  ⍝ will be set during Init
 
     ∇ Init arg;pckgs;mkt;config;project_dir;logger;mkv
       :Implements constructor
@@ -8,56 +8,39 @@
       ns←⍎('email_',config.id)#.⎕NS''
       ns.config←⎕JSON ⎕JSON config
       ⎕←'ns=',ns
-      mkv←'4.14.0'  ⍝ Mailkit Version
+      mkv←'4.14.0'  ⍝ MailKit Version
       project_dir←(739⌶0),'/Eventler_email_pop3_',mkv
       (#.NuGet←#.nuget).Setup project_dir
       {}#.NuGet.Add project_dir('MimeKit/',mkv)('MailKit/',mkv)
       ns.⎕USING←('System' 'System.Text' 'System.IO' 'System.Threading' 'MailKit' 'MailKit.Net.Pop3'),#.NuGet.Using project_dir
       ns.CancellationToken←ns.(⎕NEW Threading.CancellationToken 0)
-⍝ ct←⎕NULL ⍝ Alternatively (⎕NEW CancellationToken 0)
       :Trap 90
           ns.logger←ns.{⎕NEW MailKit.ProtocolLogger(⍵ 1)}project_dir,'/pop3_',config.id,'.log'
           ns.logger.RedactSecrets←1
-          ns.logger.(LogConnect(⎕NEW System.Uri(⊂'pop3://',##.config.pop3_server)))
+          ns.logger{⍺.(LogConnect(⎕NEW System.Uri(⊂'pop3://',⍵)))}config.pop3_server
           ns.(pop3←⎕NEW Pop3Client logger)
       :Else
-          ⎕←'WARN [email.Init]: POP3-Log-Datei gesperrt, starte ohne Protocol-Logger'
+          ⎕←'WARN [email.Init]: POP3 log file locked, starting without protocol logger'
           ns.(pop3←⎕NEW Pop3Client)
       :EndTrap
       ⎕←'[email.Init] ns.config=',⎕JSON ns.config
       ⎕←'Created pop3 in ',ns
     ∇
 
-    ∇ R←Run nul;pop3;M;z;m;msg;modes;mode;fls
+    ∇ R←Run nul;pop3;M;z;m;msg;modes;mode;fls;fld
       :Access public
-⍝ checks for new events.
-⍝ returns namespace(s) of things that were found
-⍝ every item has these elements:
-⍝ .headers
-⍝ .parts
-⍝ .subject
-⍝ .sender
-⍝ .headers - a list of 2 element items (Field Value)
-⍝ .date (RFC822)
-⍝ .account (pop3_user)
-⍝ .Text (vtv containing lines of plaintxt msg)
-⍝ .Html (vtv containing lines of Html msg)
-⍝ .Filename (full path to file where msg was saved)
-⍝
-⍝-------- generic elements in EVERY event msg, regardless of where it comes from!
-⍝ .origin = "email"
-⍝ .cfg (id of the config that was processed when we found this event)
-⍝ .ticks = UNIX time (tick count (secs) since 1970-01-01)
+⍝ Checks for new events.
+⍝ Returns namespace(s) of messages found.
       R←⍬
       ⎕←'[email.Run] ns.config=',⎕JSON ns.config
       :Trap 90
           ns.(pop3.Connect config.(pop3_server pop3_port pop3_secure),CancellationToken)
           ns.(pop3.Authenticate config.(pop3_user pop3_pswd),CancellationToken)
       :Else
-          ∘∘∘∘∘∘Exception∘∘∘∘∘∘∘∘!
+          ⎕←'ERR [email.Run]: failed to connect/authenticate POP3'
           →0
       :EndTrap
-      modes←1  ⍝ default to just checking for new mail, not repeat processing of old mail (in pop3repeat folder)
+      modes←1
       :If ⎕NEXISTS fld←ns.config.Folder,'pop3repeat'
           modes+←0<≢fls←⊃0(⎕NINFO⍠1)fld,'/*'
       :EndIf
@@ -69,9 +52,8 @@
               :Else
                   m←ns.MimeKit.MimeMessage.Load(msg⊃fls)ns.CancellationToken
               :EndIf
-     
-              ⍝ message specific fields
-              M←⎕NS''  ⍝ ns for this msg
+
+              M←⎕NS''
               M.account←ns.config.pop3_user
               M.Filename←ns.config.Folder,'in/',({⍵≡⎕NULL:⍕⎕TS ⋄ ⍵}m.MessageId),'.eml'
               1 ⎕MKDIR 1⊃⎕NPARTS M.Filename
@@ -83,28 +65,26 @@
               M.(subject_original←subject)
               :If ns.config.cleanSubject
                   :While ∆≢M.subject←('(?:AW:|FW:|RE:|FWD:|\[EXTERN]|Antwort:|Weiterleitung:|WG:)\s*'⎕R''⍠'IC' 1)∆←M.subject
-                  :EndWhile   ⍝ keep removing prefixes until there are no more
+                  :EndWhile
               :EndIf
               ⎕←↑M.(subject_original subject)
-              M.headers←m.Headers[¯1+⍳m.Headers.Count].(Field Value)   ⍝ we do the HighRank Split here,
-                  ⍝ we probably should also decode parts here!
+              M.headers←m.Headers[¯1+⍳m.Headers.Count].(Field Value)
               M.Text←{⍵≡⎕NULL:'' ⋄ ⍵}m.TextBody
               M.Html←{⍵≡⎕NULL:'' ⋄ ⍵}m.HtmlBody
               M.HasAttachments←0<≢m.Attachments
-     
+
               M.cfg←ns.config.id
               M.origin←'email'
-              M.ticks←20 ⎕DT⊂⎕TS    ⍝ timestamp of event
+              M.ticks←20 ⎕DT⊂⎕TS
               R,←M
               ⎕EX'M'
               :If mode=1
-                  {ns.(pop3.DeleteMessage ⍵ CancellationToken)}msg  ⍝ delete processed msgs
+                  {ns.(pop3.DeleteMessage ⍵ CancellationToken)}msg
               :Else
                   ⎕NDELETE msg⊃fls
               :EndIf
           :EndFor
       :EndFor
       ns.(pop3.Disconnect 1 CancellationToken)
-     
     ∇
 :endclass

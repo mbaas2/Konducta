@@ -1,4 +1,4 @@
-:class eventler_Handler
+:class KonductaHandler
     :field public txt_ns
     :field public cfg
     :field public CFG
@@ -7,6 +7,14 @@
     ∇ R←RMB R
       :Access public
       R←' '(1↓,⊢⍤/⍨1(⊢∨⌽)0,≠)R
+    ∇
+
+    ∇ R←myBase
+      :Access public
+      :If 0=≢txt_ns
+          11 ⎕SIGNAL'Can not determine base ns w/o txt_ns!'
+      :EndIf
+      R←txt_ns.##
     ∇
 
     ∇ txt←⍙ id;values;ns;i;replace⍙
@@ -20,12 +28,12 @@
       :Else
           values←⍬
       :EndIf
-      :If 2=(ns←⍎'#.',txt_ns,'.',cfg.##.handler_cfg.lang).⎕NC id
+      :If 2=(ns←txt_ns⍎cfg.##.handler_cfg.lang).⎕NC id
           txt←ns⍎id
-      :ElseIf 2=(ns←⍎'#.',txt_ns,'.en').⎕NC id
+      :ElseIf 2=(ns←txt_ns⍎'en').⎕NC id
           txt←ns⍎id
       :Else ⍝*** id not found!
-          ⎕←'⍙''',id,''' not found!'    ⍝ spit out info in session
+          'ERR' 'SYS'Log'⍙''',id,''' not found!'
           txt←id              ⍝ return id as text
       :EndIf
      
@@ -92,7 +100,7 @@
           :OrIf {2=cfg.⎕NC ⍵:cfg⍎⍵ ⋄ 0}'log_console'
               ⎕←r
           :EndIf
-          f←CFG.config.Folder,'alisia-',(⍕v[1]),(¯2↑'0',⍕v[2]),(¯2↑'0',⍕v[3]),'.jsonl'
+          f←CFG.config.Folder,'log-',(⍕v[1]),(¯2↑'0',⍕v[2]),(¯2↑'0',⍕v[3]),'.jsonl'
           (⊂r)⎕NPUT f 2
           :If cat≡'SUB'  ⍝ GDPR audit trail: also write to audit.jsonl
               (⊂r)⎕NPUT(CFG.config.Folder,'audit.jsonl')2
@@ -110,7 +118,7 @@
       ⎕USING∪←⊂'System,System.Runtime'
       :For offset :In ⌽0∪{6::6 ⋄ 0⌈6⌊⍎⍵}'days'
           d←DateTime.Today.AddDays(-offset)
-          logf←CFG.config.Folder,'alisia-',(⍕d.Year),(¯2↑'0',⍕d.Month),(¯2↑'0',⍕d.Day),'.jsonl'
+          logf←CFG.config.Folder,'log-',(⍕d.Year),(¯2↑'0',⍕d.Month),(¯2↑'0',⍕d.Day),'.jsonl'
           :If ~⎕NEXISTS logf ⋄ :Continue ⋄ :EndIf
           rawlog←(⎕UCS 10)#.split(1⊃⎕NGET logf)~⎕UCS 13
           txt←txt,((0<≢¨rawlog)/rawlog)
@@ -149,10 +157,10 @@
       'DBG' 'SYS'Log'IsDevUser, email=',email,' => ',⍕z
     ∇
 
-∇ R←FirstWord R 
-    :Access public
-    R←RMB R
-    R←(¯1+R⍳' ')↑R
+    ∇ R←FirstWord R
+      :Access public
+      R←RMB R
+      R←(¯1+R⍳' ')↑R
     ∇
-        
+
 :endclass

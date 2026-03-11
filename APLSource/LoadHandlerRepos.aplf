@@ -1,22 +1,25 @@
- LoadHandlerRepos←{
+ LoadHandlerRepos repos;repo;path;ns
 ⍝ Load handler code from configured repositories
 ⍝ ⍵ = handlerRepos array from Config
 ⍝ All repos must have APLSource/ structure
 ⍝ Returns: nothing (side effect: imports code into #.Handlers.*)
-     repos←⍵
-     '#.Handlers'⎕NS''
-     :If 0=≢repos
-         ⎕←'No handler repositories configured'
-         :Return
-     :EndIf
-     :For repo :In repos
-         :If 0<≢path←repo.path
-             ns←repo.namespace
+⍝ Skips re-importing if handler already loaded
+ '#.Handlers'⎕NS''
+ :If 0=≢repos
+     ⎕←'No handler repositories configured'
+     :Return
+ :EndIf
+ :For repo :In repos
+     :If 0<≢path←repo.path
+         ns←repo.namespace
+         :If 0=⎕NC ns  ⍝ Check if namespace already exists
              ns ⎕NS''
              ⎕SE.Link.Import ns(path,'APLSource')
              ⎕←'Handler repo "',repo.name,'" loaded into ',ns,' from ',path,'APLSource'
          :Else
-             ⎕←'Skipping handler repo "',repo.name,'" (no path configured)'
+             ⎕←'Handler repo "',repo.name,'" already loaded in ',ns
          :EndIf
-     :EndFor
- }
+     :Else
+         ⎕←'Skipping handler repo "',repo.name,'" (no path configured)'
+     :EndIf
+ :EndFor

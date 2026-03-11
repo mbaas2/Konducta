@@ -1,19 +1,17 @@
-:Class github
-⍝ Konducata trigger type for GitHub webhook events.
-⍝ No polling — release events arrive via the Jarvis /github_webhook endpoint.
+:class github
     :field public ns
 
-    ∇ Init arg;config
+    ∇ Init arg
       :Implements constructor
       :Access public
-      config←arg
-      ns←⎕NS''
-      ns.config←⎕JSON ⎕JSON config
+      ns←⍎('github_',arg.id)#.⎕NS''
+      ns.config←⎕JSON ⎕JSON arg
+      ⎕←'[github.Init] cfg=',ns.config.id
     ∇
 
-    ∇ R←Run nul
+    ∇ r←Run nul
       :Access public
-      R←⍬  ⍝ No polling needed — events are pushed via webhook
+      ⍝ GitHub events are queued by webhook callback (github_webhook); polling trigger is a no-op.
+      r←⍬
     ∇
-
-:EndClass
+:endclass

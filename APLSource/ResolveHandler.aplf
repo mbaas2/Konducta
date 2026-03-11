@@ -1,13 +1,42 @@
- ResolveHandler←{
-⍝ Resolve handler name to class reference
-⍝ ⍵ = handler string in format "RepoName.ClassName"
-⍝ Returns: class reference
-     parts←('.'∘≠⊆⊢)⍵
-     
-⍝ Handler must be in format "RepoName.ClassName"
-     2≠≢parts:⎕SIGNAL/('Handler format must be "RepoName.ClassName": ',⍵)11
-     repo cls←parts
-     nspath←'#.Handlers.',repo,'.',cls
-     0=#.⎕NC nspath:⎕SIGNAL/('Handler class not found: ',nspath)11
-     ⍎nspath
- }
+r←ResolveHandler h;name;parts;repo;cls;nspath;repos;found;repoNs;members;hits;m
+⍝ Resolve handler name to class reference.
+⍝ Preferred format: "ClassName" (e.g. "Alisia", "GitHubHandler").
+⍝ Legacy format "RepoName.ClassName" is accepted as fallback.
+ name←' '~⍨h
+ parts←('.'∘≠⊆⊢)name
+
+⍝ Legacy explicit format: RepoName.ClassName
+ :If 2=≢parts
+      repo cls←parts
+      nspath←'#.Handlers.',repo,'.',cls
+      :If 0=#.⎕NC nspath
+           ⎕SIGNAL/('Handler class not found: ',nspath)11
+      :EndIf
+      r←⍎nspath
+      →0
+ :EndIf
+
+⍝ Simplified format: ClassName (search through loaded handler repos)
+ cls←name
+ :If 9≠#.⎕NC'#.Handlers'
+      ⎕SIGNAL/('Handlers namespace not loaded: ',name)11
+ :EndIf
+ repos←#.Handlers.⎕NL ¯9
+found←⍬
+ :For repo :In repos
+      repoNs←⍎'#.Handlers.',repo
+      members←repoNs.⎕NL ¯9 ¯2
+      hits←(⊂⎕C cls)∊⎕C¨members
+      :If ∨/hits
+           :For m :In hits/members
+                found,←⊂'#.Handlers.',repo,'.',m
+           :EndFor
+      :EndIf
+ :EndFor
+ :If 0=≢found
+      ⎕SIGNAL/('Handler class not found: ',cls)11
+ :EndIf
+ :If 1<≢found
+      ⎕SIGNAL/('Ambiguous handler class (multiple repos): ',cls,' -> ',∊found,¨⊂', ')11
+ :EndIf
+r←⍎⊃found
