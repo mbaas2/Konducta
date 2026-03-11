@@ -1,4 +1,4 @@
-Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash
+ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash
 ⍝ Initialises eventler and starts the main "listinging loop"
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
@@ -9,7 +9,7 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
 
  EnsureSlash←{0=≢⍵:'' ⋄ ⍵,(~⍵[≢⍵]∊'\/')/'/'}
  cfgEnv←2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_CONFIG'
- #.Home←Home←1⊃⎕nparts  cfgEnv
+ #.Home←Home←1⊃⎕NPARTS cfgEnv
  ⎕←'Home=',Home
  ConfigRoot←EnsureSlash cfgEnv
  :If 0=≢ConfigRoot
@@ -49,7 +49,7 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
  :If 2=#.Config.⎕NC'handlerRepos'
  :AndIf 0<≢#.Config.handlerRepos
      LoadHandlerRepos #.Config.handlerRepos
-     :else
+ :Else
      ⎕←'"handlerRepos" not found in config or empty, skipping loading handler repositories'
  :EndIf
 
@@ -93,10 +93,10 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
      jarvis_callbacks,←⊂'secret_update'
  :EndIf
 
-:If 3=#.⎕NC'secret_update_confirm'
-:AndIf ~(⊂'secret_update_confirm')∊jarvis_callbacks
-    jarvis_callbacks,←⊂'secret_update_confirm'
-:EndIf
+ :If 3=#.⎕NC'secret_update_confirm'
+ :AndIf ~(⊂'secret_update_confirm')∊jarvis_callbacks
+     jarvis_callbacks,←⊂'secret_update_confirm'
+ :EndIf
 
  :If 0<≢jarvis_callbacks
 ⍝ we need Jarvis! so lets launch it
@@ -143,8 +143,9 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
             ⍝ maybe we should re-create instances only if config was changed! (keep a timestamp of config files in instance...)
             ⍝ (for the initial proof of concept this is fine, but should be addressed later!)
                      i+←1
-                     ⎕←⎕TS,trg
+
                      Handler←i⊃#.Triggers.handlers  ⍝ "Handler" might be used  in rules or "Run"
+                     'DBG' 'SYS'Handler.Log'───────── Next round for handler: ',⍕Handler
                      ⎕←'trg='
                      ref←i⊃#.Triggers.instances   ⍝ see initial comments about re-creating instances only when needed!
                      :If 0<≢events←ref⍎'Run ⍬'
@@ -187,6 +188,7 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
      :Else
          :Select ⎕EN
          :Case 801   ⍝ RESTART Event (triggered by GITUPD)
+             'DBG' 'SYS'(⊃#.Triggers.handlers).Log'Restart event was triggered'
              →1
          :EndSelect
      :EndTrap
