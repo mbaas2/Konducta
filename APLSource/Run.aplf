@@ -3,7 +3,7 @@ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hd
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
  ⎕SE.SESSIONSTART←'*** Konducta *** ',⍕⎕TS
-Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'Konducta_ROOT'
+Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_ROOT'
  #.Home←Home
  ⎕←'Home=',Home
 
@@ -14,7 +14,7 @@ Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'Konducta_ROOT
      ConfigRoot←Home,'Config/'
  :EndIf
  #.ConfigRoot←ConfigRoot
- (cfgRulesFile cfgTriggersFile cfgMainFile)←ConfigRoot∘,¨'rules.json5' 'triggers.json5' 'Konducta.json5'
+ (cfgRulesFile cfgTriggersFile cfgMainFile)←ConfigRoot∘,¨'rules.json5' 'triggers.json5' 'konducta.json5'
  ⎕←'ConfigRoot=',ConfigRoot
 
 
