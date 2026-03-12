@@ -1,4 +1,4 @@
- add2Q e;file;i
+ add2Q e;file;i;qfile
 
  file←(⍕e.ticks),'_',e.cfg
  :If ⎕NEXISTS Home,'Data/evq/',file,'.json5'
@@ -10,4 +10,9 @@
      file←file,⍕i
  :EndIf
 
- (⊂(⎕JSON ⎕OPT('Dialect' 'JSON5')('Compact' 0)('HighRank' 'Split'))e)⎕NPUT Home,'Data/evq/',file,'.json5'
+ qfile←Home,'Data/evq/',file,'.json5'
+ (⊂(⎕JSON ⎕OPT('Dialect' 'JSON5')('Compact' 0)('HighRank' 'Split'))e)⎕NPUT qfile
+ ⎕←'[EVQ] write: ',qfile
+ :Trap 0
+     ('INFO' 'SYS')(#.Triggers.handlerMap⍎e.cfg).Log'[EVQ] write: ',qfile
+ :EndTrap
