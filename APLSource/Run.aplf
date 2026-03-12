@@ -1,4 +1,4 @@
- Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash
+ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash;cb;cbfn;call;Handler;res;hdl_idx
 ⍝ Initialises eventler and starts the main "listinging loop"
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
@@ -70,6 +70,7 @@
          ⎕←'Handler = ⎕NEW ',hdlClass,'(ref.handler_cfg ns ref)'
          hdl←⎕NEW hdlClass(ref.handler_cfg ns ref)
          #.Triggers.handlers,←hdl
+         hdl_idx←≢#.Triggers.handlers
          ⍎'#.Triggers.handlerMap.',ns,'←hdl'
          cls←('#.Triggers.'{⍺,⍵,'.',⍵}' '~⍨⍕ref.type)
          ⎕←'Instanz'
@@ -80,32 +81,55 @@
          check_freq←check_freq⌊ref{6::⌊/⍬ ⋄ ⍎'⍺.',⍵}'check_freq_secs'
          :If 2=ref.⎕NC'jarvis_callbacks'
          :AndIf 0<≢ref.jarvis_callbacks
-             :If ∨/z←(⊆ref.jarvis_callbacks)∊jarvis_callbacks
+             :If ∨/z←(⊆ref.jarvis_callbacks)∊1↑¨jarvis_callbacks
                  ⎕←'*** Attempt to register duplicate Jarvis callback(s): ',z/⊆ref.jarvis_callbacks
              :EndIf
-             jarvis_callbacks,←(~z)/⊆ref.jarvis_callbacks
+             jarvis_callbacks,←(~z)/(⊂¨⊆ref.jarvis_callbacks),¨hdl_idx
          :EndIf
      :EndIf
  :EndFor
 
  :If 3=#.⎕NC'secret_update'
  :AndIf ~(⊂'secret_update')∊jarvis_callbacks
-     jarvis_callbacks,←⊂'secret_update'
+     jarvis_callbacks,←⊂'secret_update' '#'
  :EndIf
 
  :If 3=#.⎕NC'secret_update_confirm'
  :AndIf ~(⊂'secret_update_confirm')∊jarvis_callbacks
-     jarvis_callbacks,←⊂'secret_update_confirm'
+     jarvis_callbacks,←⊂'secret_update_confirm' '#'
  :EndIf
 
  :If 0<≢jarvis_callbacks
 ⍝ we need Jarvis! so lets launch it
+⍝TODO: we also need it if there are any html pages to deliver!
      '#.CodeLocation'⎕NS''
-
 ⍝ and create those callback-functions
-     #.CodeLocation.⎕FX¨{3=#.⎕NC ⍵:⎕NR'#.',⍵ ⋄ ('∇r←{l} ',⍵,' r')'l #.jarvis_callback2Q r' '∇'}¨jarvis_callbacks
+⍝ #.CodeLocation.⎕FX¨{3=#.⎕NC ⍵:⎕NR'#.',⍵ ⋄ 'l #.jarvis_callback2Q r' '∇'}¨jarvis_callbacks
+     :For cb :In jarvis_callbacks
+         :If '#'≡2⊃cb
+         :AndIf 3=#.⎕NC 1⊃cb
+             #.CodeLocation.⎕FX #.⎕NR 1⊃cb
+         :Else
+             'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Creating callback function for Jarvis: ',1⊃cb
+             cbfn←⊂'{R}←{l} ',(1⊃cb),' r'
+             cbfn,←⊂'r←0'   ⍝ default
+             call←'(',(⍕2⊃cb),'⊃#.Triggers.handlers).',1⊃cb
+             res←''
+             :If 1=|10(⍎{(¯1+⌈/⍸⍵='.')↑⍵}call).⎕ATX 1⊃cb ⋄ res←'R←' ⋄ :EndIf  ⍝ catch result if there is one
+             cbfn,←⊂':if 0<⎕nc''l'''
+             cbfn,←⊂res,'l ',call,' r'
+             cbfn,←⊂':else'
+             cbfn,←⊂res,'     ',call,' r'
+             cbfn,←⊂':endIf'
+             res←#.CodeLocation.⎕FX cbfn
+             :If res≢1⊃cb
+                 ⎕←'Error creating callback function for Jarvis: ',1⊃cb,' (',res,')'
+                 ∘∘∘
+             :EndIf
+         :EndIf
+     :EndFor
 
-⍝ and configure it
+   ⍝ and configure it
      'JarvisConfig'⎕NS''
      JarvisConfig.CodeLocation←#.CodeLocation
      JarvisConfig.(Port Secure)←#.Triggers.Config.(JarvisPort,{6::0 ⋄ ⍎w}'JarvisSecure')

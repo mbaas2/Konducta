@@ -1,5 +1,5 @@
 res←l jarvis_callback2Q r;z;evnt
-⍝
+⍝ add a jarvis callback to evq folder (event queue)
 evnt←⎕ns''
 evnt.cfg←r.l
 evnt.origin←'jarvis'
