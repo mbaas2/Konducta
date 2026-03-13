@@ -111,8 +111,9 @@
              #.CodeLocation.⎕FX #.⎕NR 1⊃cb
          :Else
              'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Creating callback function for Jarvis: ',1⊃cb
-             cbfn←⊂'{R}←{l} ',(1⊃cb),' r'
-             cbfn,←⊂'r←0'   ⍝ default
+             cbfn←⊂'{R}←{l} ',(1⊃cb),' r;n'
+             cbfn,←⊂'R←0'   ⍝ default
+             cbfn,←⊂'n←⎕UCS 10 ⋄ (⊂''Body:'',n,⍕((⎕JSON⍠''Compact'' 0)r),n,''Headers'',n,,l.Headers,n)⎕NPUT #.Home,,''<webhooks/>,ZI4,ZI2,ZI2,<->,ZI2,ZI2,ZI2,<.json>''⎕FMT 1 6⍴⎕TS    ⍝ log r (Request Body) and l.Headers'
              call←'(',(⍕2⊃cb),'⊃#.Triggers.handlers).',1⊃cb
              res←''
              :If 1=|10(⍎{(¯1+⌈/⍸⍵='.')↑⍵}call).⎕ATX 1⊃cb ⋄ res←'R←' ⋄ :EndIf  ⍝ catch result if there is one
