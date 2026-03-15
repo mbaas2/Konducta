@@ -3,7 +3,7 @@
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
  ⎕SE.SESSIONSTART←'*** Konducta *** ',⍕⎕TS
-⍝ Home←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_ROOT'
+ DATA←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_DATA'
 ⍝  #.Home←Home
 ⍝  ⎕←'Home=',Home
 
@@ -23,14 +23,13 @@
  :If 0=#.⎕NC'launchTS'
      #.launchTS←20 ⎕DT⊂⎕TS
  :EndIf
- :If ~⎕NEXISTS Home,'Data'
-     ⎕MKDIR Home,'Data'
-     ⎕MKDIR Home,'Data/evq'
-     ⎕MKDIR Home,'Data/evq/done'
-     ⎕MKDIR Home,'Data/Trash'
- :EndIf
- :If 0<z←≢⊃0(⎕NINFO⍠1)Home,'Data/evq/*.json5'
-     (⎕NDELETE⍠'Wildcard' 1)Home,'Data/evq/*.json5'
+ :If ~⎕NEXISTS dir←DATA ⋄ ⎕MKDIR dir ⋄ :endif
+ :If ~⎕NEXISTS dir←DATA,'/eqv/' ⋄ ⎕MKDIR dir ⋄ :endif
+ :If ~⎕NEXISTS dir←DATA,'/eqv/done' ⋄ ⎕MKDIR dir ⋄ :endif
+ :If ~⎕NEXISTS dir←DATA,'/Trash' ⋄ ⎕MKDIR dir ⋄ :endif
+
+ :If 0<z←≢⊃0(⎕NINFO⍠1)DATA,'/evq/*.json5'
+     (⎕NDELETE⍠'Wildcard' 1)DATA,'/evq/*.json5'
      ⎕←'Deleted ',(⍕z),' old files from queue during startup'
  :EndIf
  ⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
@@ -62,7 +61,7 @@
 ⍝     ∘∘∘
      :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
          ⍎'#.Triggers.Config.',ns,'.config.id←ns'
-         ⍎'#.Triggers.Config.',ns,'.config.Folder←''',Home,'Data/',ns,'/',''''
+         ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,'/',ns,'/',''''
          ref←Triggers.Config.⍎ns
          3 ⎕MKDIR ⎕←ref.config.Folder  ⍝ be sure that Folder exists
          hdl←ref.handler
@@ -191,7 +190,7 @@
                      :For ns :In #.Triggers.Config.⎕NL ¯9
                          :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
                              ⍎'#.Triggers.Config.',ns,'.config.id←ns'
-                             ⍎'#.Triggers.Config.',ns,'.config.Folder←''',Home,'Data/',ns,'/',''''
+                             ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,'/',ns,'/',''''
                          :EndIf
                      :EndFor
                  :EndIf

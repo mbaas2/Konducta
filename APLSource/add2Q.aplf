@@ -1,16 +1,16 @@
  add2Q e;file;i;qfile
 
  file←(⍕e.ticks),'_',e.cfg
- :If ⎕NEXISTS Home,'Data/evq/',file,'.json5'
+ :If ⎕NEXISTS DATA,'/evq/',file,'.json5'
      file←file,'#'
      i←1
-     :While ⎕NEXISTS Home,'Data/evq/',file,(⍕i),'.json5'
+     :While ⎕NEXISTS DATA,'/evq/',file,(⍕i),'.json5'
          i←i+1
      :EndWhile
      file←file,⍕i
  :EndIf
 
- qfile←Home,'Data/evq/',file,'.json5'
+ qfile←DATA,'/evq/',file,'.json5'
  (⊂(⎕JSON ⎕OPT('Dialect' 'JSON5')('Compact' 0)('HighRank' 'Split'))e)⎕NPUT qfile
  ⎕←'[EVQ] write: ',qfile
  :Trap 0

@@ -1,4 +1,4 @@
- R←Version w;base;sha;tag;path;vfile
+ R←Version w;base;sha;tag;path;vfile;p∆
 ⍝ Returns Konducta version from VERSION file
 ⍝ In development: appends -dev+SHA (e.g., "1.0.0-dev+a3f5c2b")
 ⍝ On tagged release: clean version (e.g., "1.0.0")
@@ -7,6 +7,10 @@
  :If 0=≢path
  :AndIf 9=#.⎕NC'Home'
      path←#.Home
+ :EndIf
+ :If ~⎕NEXISTS path,'VERSION'
+ :AndIf ⎕NEXISTS(p∆←1⊃⎕NPARTS(-∨/'\/'=⊃⌽path)↓path),'VERSION'
+     path←p∆
  :EndIf
  vfile←path,'VERSION'
  :If ⎕NEXISTS vfile

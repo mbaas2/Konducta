@@ -1,7 +1,7 @@
  procEvents;f;E;R;z;⎕PATH;ac;if;n;CFG
 ⍝ check event queue and process waiting events...
 
- :For f :In ⊃0(⎕NINFO ⎕OPT'Wildcard' 1)Home,'Data/evq/*.json5'
+ :For f :In ⊃0(⎕NINFO ⎕OPT'Wildcard' 1)DATA,'/evq/*.json5'
      E←0(⎕JSON⍠'Dialect' 'JSON5')1⊃⎕NGET f
      E.EventQueue_File←f
      CFG←#.Triggers.Config⍎E.cfg   ⍝ get config of trigger
@@ -14,10 +14,10 @@
      :EndFor
      :if ~#.Config.debug _hasBitSet 4
      :andif ⎕nexists f
-          ⎕←'[EVQ] move: ',f,' -> ',Home,'Data/evq/done/'
+          ⎕←'[EVQ] move: ',f,' -> ',DATA,'/evq/done/'
         :Trap 0
-            ('INFO' 'SYS')(#.Triggers.handlerMap⍎E.cfg).Log'[EVQ] move: ',f,' -> ',Home,'Data/evq/done/'
+            ('INFO' 'SYS')(#.Triggers.handlerMap⍎E.cfg).Log'[EVQ] move: ',f,' -> ',DATA,'/evq/done/'
         :EndTrap
-        (Home,'Data/evq/done/')⎕nmove f
+        (DATA,'/evq/done/')⎕nmove f
      :endif
  :EndFor

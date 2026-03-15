@@ -34,9 +34,10 @@ Jarvis.dyalog
 
 ## Environment Variables
 
-- `Konducta_ROOT`: Root directory (contains Config/, Data/, HTML/)
+- `Konducta_ROOT`: Root directory (contains Config/, HTML/)
 - `KonductaConfig`: Optional config directory override (contains `Konducta.json5`, `triggers.json5`, `rules.json5`)
 - `KONDUCTA_CONFIG`: Alias for `KonductaConfig` (same behavior)
+- `KONDUCTA_DATA`: points to data folder 
 
 ## Remote Secret Update (MVP)
 

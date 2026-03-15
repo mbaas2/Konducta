@@ -59,12 +59,12 @@
       :Access public
 ⍝ Event E is not relevant - move to trash
       ⎕←'[Trash] unbekannter Absender: ',E.sender,' / Betreff: ',E.subject
-      3 ⎕MKDIR #.Home,'Data/trash/'  ⍝ make sure we have a trash folder
-      :If ~∨/{⎕NEXISTS #.Home,'Data/trash/',⍵}¨∊¨1↓¨⎕NPARTS¨E.(EventQueue_File Filename)
+      3 ⎕MKDIR #.DATA,'/trash/'  ⍝ make sure we have a trash folder
+      :If ~∨/{⎕NEXISTS #.DATA,'/trash/',⍵}¨∊¨1↓¨⎕NPARTS¨E.(EventQueue_File Filename)
           ⎕←'[Trash] verschiebe: ',E.EventQueue_File
           ⎕←'[Trash] verschiebe: ',E.Filename
-          (#.Home,'Data/trash/')⎕NMOVE E.EventQueue_File
-          (#.Home,'Data/trash/')⎕NMOVE E.Filename
+          (#.DATA,'/trash/')⎕NMOVE E.EventQueue_File
+          (#.DATA,'/trash/')⎕NMOVE E.Filename
       :Else
           ⎕←'[Trash] Dateien bereits im Trash-Ordner, überspringe'
       :EndIf

@@ -71,6 +71,14 @@
               M.headers←m.Headers[¯1+⍳m.Headers.Count].(Field Value)
               M.Text←{⍵≡⎕NULL:'' ⋄ ⍵}m.TextBody
               M.Html←{⍵≡⎕NULL:'' ⋄ ⍵}m.HtmlBody
+              :If (⎕UCS 65533)∊M.Html  ⍝ U+FFFD: declared charset does not match content - re-read with windows-1252 fallback
+                  :For _p :In m.BodyParts
+                      :If (~_p.IsAttachment)∧_p{6::0 ⋄ ⍺⍎⍵}'IsHtml'
+                          :Trap 0 ⋄ M.Html←_p.GetText'windows-1252' ⋄ :EndTrap
+                          :Leave
+                      :EndIf
+                  :EndFor
+              :EndIf
               M.HasAttachments←0<≢m.Attachments
 
               M.cfg←ns.config.id
