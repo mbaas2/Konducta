@@ -23,6 +23,10 @@
              :EndIf
              ⎕←'Handler repo "',repo.name,'" already loaded in ',ns
          :EndIf
+         :If ⎕NEXISTS path,'HTML/'
+             :If ~⎕NEXISTS HTMLFOLDER ⋄ ⎕NCREATE HTMLFOLDER ⋄ :EndIf
+             (HTMLFOLDER,'/',repo.name)⎕NCOPY path,'HTML'
+         :EndIf
      :Else
          ⎕←'Skipping handler repo "',repo.name,'" (no path configured)'
      :EndIf

@@ -23,10 +23,10 @@
  :If 0=#.⎕NC'launchTS'
      #.launchTS←20 ⎕DT⊂⎕TS
  :EndIf
- :If ~⎕NEXISTS dir←DATA ⋄ ⎕MKDIR dir ⋄ :endif
- :If ~⎕NEXISTS dir←DATA,'/eqv/' ⋄ ⎕MKDIR dir ⋄ :endif
- :If ~⎕NEXISTS dir←DATA,'/eqv/done' ⋄ ⎕MKDIR dir ⋄ :endif
- :If ~⎕NEXISTS dir←DATA,'/Trash' ⋄ ⎕MKDIR dir ⋄ :endif
+ :If ~⎕NEXISTS dir←DATA ⋄ ⎕MKDIR dir ⋄ :EndIf
+ :If ~⎕NEXISTS dir←DATA,'/eqv/' ⋄ ⎕MKDIR dir ⋄ :EndIf
+ :If ~⎕NEXISTS dir←DATA,'/eqv/done' ⋄ ⎕MKDIR dir ⋄ :EndIf
+ :If ~⎕NEXISTS dir←DATA,'/Trash' ⋄ ⎕MKDIR dir ⋄ :EndIf
 
  :If 0<z←≢⊃0(⎕NINFO⍠1)DATA,'/evq/*.json5'
      (⎕NDELETE⍠'Wildcard' 1)DATA,'/evq/*.json5'
@@ -43,6 +43,7 @@
      {}ApplySecretsIfChanged ⍬
  :EndIf
  Trapping←#.Config{6::0 ⋄ ⍺⍎⍵}'Trapping'
+ #.HTMLFOLDER←(⎕MKDIR⍠'Unique' 1)(739⌶0),'/Konducta_HTML_'   ⍝ might be used by handlers to store html files for delivery via Jarvis (or similar)
 
  ⍝ Load handler repositories from config (new modular approach)
  :If 2=#.Config.⎕NC'handlerRepos'
@@ -51,7 +52,6 @@
  :Else
      ⎕←'"handlerRepos" not found in config or empty, skipping loading handler repositories'
  :EndIf
-
  jarvis_callbacks←⍬
  check_freq←⌊/⍬
  #.Triggers.(list instances handlers)←⊂⍬
@@ -72,7 +72,6 @@
          hdl_idx←≢#.Triggers.handlers
          ⍎'#.Triggers.handlerMap.',ns,'←hdl'
          cls←('#.Triggers.'{⍺,⍵,'.',⍵}' '~⍨⍕ref.type)
-         ⎕←'Instanz'
          #.Triggers.list←⊂⎕←'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
          #.Triggers.instances,←r2←⍎⊃¯1↑#.Triggers.list
          hdl.TheInstance←r2
@@ -134,7 +133,9 @@
      JarvisConfig.CodeLocation←#.CodeLocation
      JarvisConfig.(Port Secure)←#.Triggers.Config.(JarvisPort,{6::0 ⋄ ⍎w}'JarvisSecure')
      JarvisConfig.Paradigm←'JSON'
-     JarvisConfig.HTMLInterface←Home,'HTML/'
+     :If 0<≢⊃0(⎕NINFO⍠1)HTMLFOLDER,'/*'
+         JarvisConfig.HTMLInterface←HTMLFOLDER
+     :EndIf
      JarvisConfig.HTMLDefaultPage←''
      JarvisConfig.Jarvis_Thread←0
      JarvisConfig.AllowGETs←1  ⍝ allow calling endpoints with Http-GET
