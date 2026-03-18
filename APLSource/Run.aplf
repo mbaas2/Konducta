@@ -57,8 +57,9 @@
  #.Triggers.(list instances handlers)←⊂⍬
  '#.Triggers.handlerMap'⎕NS''
  :For ns :In #.Triggers.Config.⎕NL ¯9
-     ⎕←'setup ',ns
-⍝     ∘∘∘
+     :If 0=⎕NC'#.Triggers.Config.',ns,'.config'       ⍝ create config ns if it doesn't exist in the json data
+         ('#.Triggers.Config.',ns,'.config')⎕NS''
+     :EndIf
      :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
          ⍎'#.Triggers.Config.',ns,'.config.id←ns'
          ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,'/',ns,'/',''''
