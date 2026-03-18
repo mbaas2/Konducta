@@ -24,9 +24,9 @@
      #.launchTS←20 ⎕DT⊂⎕TS
  :EndIf
  :If ~⎕NEXISTS dir←DATA ⋄ ⎕MKDIR dir ⋄ :EndIf
- :If ~⎕NEXISTS dir←DATA,'/eqv/' ⋄ ⎕MKDIR dir ⋄ :EndIf
- :If ~⎕NEXISTS dir←DATA,'/eqv/done' ⋄ ⎕MKDIR dir ⋄ :EndIf
- :If ~⎕NEXISTS dir←DATA,'/Trash' ⋄ ⎕MKDIR dir ⋄ :EndIf
+ :If ~⎕NEXISTS dir←DATA,'/evq/' ⋄ ⎕MKDIR dir ⋄ :EndIf
+ :If ~⎕NEXISTS dir←DATA,'/evq/done' ⋄ ⎕MKDIR dir ⋄ :EndIf
+ :If ~⎕NEXISTS dir←DATA,'/trash' ⋄ ⎕MKDIR dir ⋄ :EndIf
 
  :If 0<z←≢⊃0(⎕NINFO⍠1)DATA,'/evq/*.json5'
      (⎕NDELETE⍠'Wildcard' 1)DATA,'/evq/*.json5'
