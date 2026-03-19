@@ -1,0 +1,37 @@
+ {r}←{lv_cat}Log msg_folder_cfg;lv;cat;lvn;entry;f;ts;v;msg;folder;log_cfg;log_level;log_console
+⍝ General-purpose log function, callable from anywhere in # namespace
+⍝ ⍵: msg  —or—  (msg folder)  —or—  (msg folder log_cfg_ns)
+⍝ ⍺: 'LEVEL'  —or—  ('LEVEL' 'CAT')  — optional, default: 'INFO' 'SYS'
+ msg←1⊃,⊆msg_folder_cfg
+ folder←{3::'' ⋄ 2⊃,⊆⍵}msg_folder_cfg
+ log_cfg←{3::⎕NS'' ⋄ 3⊃,⊆⍵}msg_folder_cfg
+ :If 0=≢folder ⋄ folder←{0<≢⍵:⍵ ⋄ ''}#.DATA,'SYS/' ⋄ :EndIf
+ :If 0=⎕NC'lv_cat'
+     (lv cat)←'INFO' 'SYS'
+ :ElseIf 1<≡lv_cat
+     (lv cat)←2↑lv_cat,(⊂'SYS')
+ :Else
+     (lv cat)←lv_cat'SYS'
+ :EndIf
+ log_level←{2=log_cfg.⎕NC ⍵:log_cfg⍎⍵ ⋄ 2}'log_level'
+ log_console←{2=log_cfg.⎕NC ⍵:log_cfg⍎⍵ ⋄ 0}'log_console'
+ lvn←'ERR' 'WARN' 'INFO' 'DBG'⍳⊂lv
+ :If lvn≤1+log_level
+     v←⎕TS
+     ts←⊃'%ISO%'(1200⌶)1 ⎕DT⊂v
+     entry←⎕NS''
+     entry.(ts level cat)←ts lv cat
+     :If 1<≡msg ⋄ entry.msg←⊃msg ⋄ entry.email←2⊃msg
+     :Else ⋄ entry.msg←∊⍕msg
+     :EndIf
+     r←(⎕JSON⍠'Compact' 1)entry
+     :If 'ERR'≡lv ⋄ :OrIf log_console ⋄ ⎕←r ⋄ :EndIf
+     :If 0<≢folder
+         3 ⎕MKDIR folder
+         f←folder,'log-',(⍕v[1]),(¯2↑'0',⍕v[2]),(¯2↑'0',⍕v[3]),'.jsonl'
+         (⊂r)⎕NPUT f 2
+         :If cat≡'SUB'
+             (⊂r)⎕NPUT(folder,'audit.jsonl')2
+         :EndIf
+     :EndIf
+ :EndIf

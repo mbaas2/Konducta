@@ -5,7 +5,7 @@
      E←0(⎕JSON⍠'Dialect' 'JSON5')1⊃⎕NGET f
      E.EventQueue_File←f
      CFG←#.Triggers.Config⍎E.cfg   ⍝ get config of trigger
-     ⎕←'[procEvents] ',E.cfg,' von: ',E.sender,' / Betreff: ',E.subject
+     ('INFO' 'SYS')(#.Triggers.handlerMap⍎E.cfg).Log'[procEvents] ',E.cfg,' von: ',E.sender,' / Betreff: ',E.subject
 
      :For n :In rules.⎕NL ¯9
          R←rules⍎n
@@ -14,7 +14,6 @@
      :EndFor
      :if ~#.Config.debug _hasBitSet 4
      :andif ⎕nexists f
-          ⎕←'[EVQ] move: ',f,' -> ',DATA,'/evq/done/'
         :Trap 0
             ('INFO' 'SYS')(#.Triggers.handlerMap⍎E.cfg).Log'[EVQ] move: ',f,' -> ',DATA,'/evq/done/'
         :EndTrap

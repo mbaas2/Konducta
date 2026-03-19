@@ -6,11 +6,6 @@
          z←0<≢R.if
          :For if :In ⊆R.if
              z∧←∆←⍎'Handler.{',if,'}E'
-             :If #.Config.debug _hasBitSet 2
-⍝                 (⎕LC[1]+3)⎕STOP 1⊃⎕SI
-                 ⎕←'tracerule:'
-                 ⎕←'if=',if,'  ==> ',(⍕∆),', z=',⍕z
-             :EndIf
             'DBG' 'SYS'(⊃#.Triggers.handlers).Log'if=>',if,'<    ==> ',(⍕∆),', z=',⍕z
 
          :EndFor

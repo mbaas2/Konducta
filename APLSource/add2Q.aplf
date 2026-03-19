@@ -12,7 +12,6 @@
 
  qfile←DATA,'/evq/',file,'.json5'
  (⊂(⎕JSON ⎕OPT('Dialect' 'JSON5')('Compact' 0)('HighRank' 'Split'))e)⎕NPUT qfile
- ⎕←'[EVQ] write: ',qfile
- :Trap 0
+  :Trap 0
      ('INFO' 'SYS')(#.Triggers.handlerMap⍎e.cfg).Log'[EVQ] write: ',qfile
  :EndTrap

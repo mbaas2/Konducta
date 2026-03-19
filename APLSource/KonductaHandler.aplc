@@ -3,6 +3,12 @@
     :field public cfg
     :field public CFG
     :field public TheInstance
+    :field public shared version←'N/A'
+
+    ∇ SetVersion v
+      :Access public shared
+      version←v
+    ∇
 
     ∇ R←RMB R
       :Access public
@@ -71,41 +77,10 @@
       z←1
     ∇
 
-    ∇ {r}←{lv_cat}Log msg;lv;cat;lvn;entry;f;ts;v
+    ∇ {r}←{lv_cat}Log msg
       :Access public
-      ⍝ Append a JSON log entry to the daily log file in CFG.config.Folder
-      ⍝ lv_cat (optional left arg): 'LEVEL' or ('LEVEL' 'CAT')
-      ⍝   Levels: ERR WARN INFO DBG  |  Categories: SYS SUB ADM SMTP BOUNCE SEC
-      ⍝ msg: simple string, or (string email) 2-vector for subscriber audit entries
-      :If 0=⎕NC'lv_cat'
-          (lv cat)←'INFO' 'SYS'
-      :ElseIf 1<≡lv_cat
-          (lv cat)←2↑lv_cat,(⊂'SYS')
-      :Else
-          (lv cat)←lv_cat'SYS'
-      :EndIf
-      lvn←'ERR' 'WARN' 'INFO' 'DBG'⍳⊂lv  ⍝ 1=ERR 2=WARN 3=INFO 4=DBG
-      :If lvn≤1+{2=cfg.⎕NC ⍵:cfg⍎⍵ ⋄ 2}'log_level'
-          v←⎕TS
-          ts←(⍕v[1]),'-',(¯2↑'0',⍕v[2]),'-',(¯2↑'0',⍕v[3]),'T',(¯2↑'0',⍕v[4]),':',(¯2↑'0',⍕v[5]),':',(¯2↑'0',⍕v[6]),'.',(¯3↑'000',⍕v[7])
-          entry←⎕NS''
-          entry.(ts level cat)←ts lv cat
-          :If 1<≡msg  ⍝ (message email) 2-vector → structured subscriber entry
-              entry.msg←⊃msg ⋄ entry.email←2⊃msg
-          :Else
-              entry.msg←∊⍕msg
-          :EndIf
-          r←(⎕JSON⍠'Compact' 1)entry
-          :If 'ERR'≡lv
-          :OrIf {2=cfg.⎕NC ⍵:cfg⍎⍵ ⋄ 0}'log_console'
-              ⎕←r
-          :EndIf
-          f←CFG.config.Folder,'log-',(⍕v[1]),(¯2↑'0',⍕v[2]),(¯2↑'0',⍕v[3]),'.jsonl'
-          (⊂r)⎕NPUT f 2
-          :If cat≡'SUB'  ⍝ GDPR audit trail: also write to audit.jsonl
-              (⊂r)⎕NPUT(CFG.config.Folder,'audit.jsonl')2
-          :EndIf
-      :EndIf
+      ⍝ Delegate to #.Log with this handler's folder and cfg
+      r←lv_cat #.Log(msg CFG.config.Folder cfg)
     ∇
 
     ∇ txt←{days}GetLogs flt;offset;d;logf;rawlog

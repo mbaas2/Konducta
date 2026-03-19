@@ -4,20 +4,21 @@
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
  ⎕SE.SESSIONSTART←'*** Konducta *** ',⍕⎕TS
  DATA←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_DATA'
+ #.DATA←DATA
 ⍝  #.Home←Home
 ⍝  ⎕←'Home=',Home
 
  EnsureSlash←{0=≢⍵:'' ⋄ ⍵,(~⍵[≢⍵]∊'\/')/'/'}
  cfgEnv←2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_CONFIG'
  #.Home←Home←1⊃⎕NPARTS cfgEnv
- ⎕←'Home=',Home
+ 'INFO' 'SYS'#.Log('Home=',Home)(#.DATA,'SYS/')
  ConfigRoot←EnsureSlash cfgEnv
  :If 0=≢ConfigRoot
      ConfigRoot←Home,'Config/'
  :EndIf
  #.ConfigRoot←ConfigRoot
  (cfgRulesFile cfgTriggersFile cfgMainFile)←ConfigRoot∘,¨'rules.json5' 'triggers.json5' 'konducta.json5'
- ⎕←'ConfigRoot=',ConfigRoot
+ 'INFO' 'SYS'#.Log('ConfigRoot=',ConfigRoot)(#.DATA,'SYS/')
 
 
  :If 0=#.⎕NC'launchTS'
@@ -30,7 +31,7 @@
 
  :If 0<z←≢⊃0(⎕NINFO⍠1)DATA,'/evq/*.json5'
      (⎕NDELETE⍠'Wildcard' 1)DATA,'/evq/*.json5'
-     ⎕←'Deleted ',(⍕z),' old files from queue during startup'
+     'INFO' 'SYS'#.Log('Deleted ',(⍕z),' old files from queue during startup')(#.DATA,'SYS/')
  :EndIf
  ⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
 
@@ -50,7 +51,7 @@
  :AndIf 0<≢#.Config.handlerRepos
      LoadHandlerRepos #.Config.handlerRepos
  :Else
-     ⎕←'"handlerRepos" not found in config or empty, skipping loading handler repositories'
+     'INFO' 'SYS'#.Log'"handlerRepos" not found in config or empty, skipping loading handler repositories'(#.DATA,'SYS/')
  :EndIf
  jarvis_callbacks←⍬
  check_freq←⌊/⍬
@@ -62,18 +63,20 @@
      :EndIf
      :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
          ⍎'#.Triggers.Config.',ns,'.config.id←ns'
-         ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,'/',ns,'/',''''
+         ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,ns,'/',''''
          ref←Triggers.Config.⍎ns
-         3 ⎕MKDIR ⎕←ref.config.Folder  ⍝ be sure that Folder exists
+         'INFO' 'SYS'#.Log ref.config.Folder(#.DATA,'SYS/')
+         3 ⎕MKDIR ref.config.Folder  ⍝ be sure that Folder exists
          hdl←ref.handler
          hdlClass←ResolveHandler hdl
-         ⎕←'Handler = ⎕NEW ',hdlClass,'(ref.handler_cfg ns ref)'
+         'INFO' 'SYS'#.Log('Handler = ⎕NEW ',hdlClass,'(ref.handler_cfg ns ref)')(#.DATA,'SYS/')
          hdl←⎕NEW hdlClass(ref.handler_cfg ns ref)
          #.Triggers.handlers,←hdl
          hdl_idx←≢#.Triggers.handlers
          ⍎'#.Triggers.handlerMap.',ns,'←hdl'
          cls←('#.Triggers.'{⍺,⍵,'.',⍵}' '~⍨⍕ref.type)
-         #.Triggers.list←⊂⎕←'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
+         'INFO' 'SYS'#.Log('⎕NEW ',cls,' #.Triggers.Config.',ns,'.config')(#.DATA,'SYS/')
+         #.Triggers.list←⊂'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
          #.Triggers.instances,←r2←⍎⊃¯1↑#.Triggers.list
          hdl.TheInstance←r2
          r2.Loc←ns
@@ -81,7 +84,7 @@
          :If 2=ref.⎕NC'jarvis_callbacks'
          :AndIf 0<≢ref.jarvis_callbacks
              :If ∨/z←(⊆ref.jarvis_callbacks)∊1↑¨jarvis_callbacks
-                 ⎕←'*** Attempt to register duplicate Jarvis callback(s): ',z/⊆ref.jarvis_callbacks
+                 'WARN' 'SYS'#.Log('*** Attempt to register duplicate Jarvis callback(s): ',⍕z/⊆ref.jarvis_callbacks)(#.DATA,'SYS/')
              :EndIf
              jarvis_callbacks,←(~z)/(⊂¨⊆ref.jarvis_callbacks),¨hdl_idx
          :EndIf
@@ -123,7 +126,7 @@
              cbfn,←⊂':endIf'
              res←#.CodeLocation.⎕FX cbfn
              :If res≢1⊃cb
-                 ⎕←'Error creating callback function for Jarvis: ',1⊃cb,' (',res,')'
+                 'ERR' 'SYS'(⊃#.Triggers.handlers).Log'Error creating callback function for Jarvis: ',(1⊃cb),' (',res,')'
                  ∘∘∘
              :EndIf
          :EndIf
@@ -143,7 +146,9 @@
      JarvisConfig.Debug←#.Triggers.Config'JarvisDebug'{0=(1⊃⍺).⎕NC 2⊃⍺:⍵ ⋄ ⍎/⍺}0
 ⍝ should add ValidateRequest and check for some credentials to make it harder to hack
      #.jarvis←#.Jarvis.New JarvisConfig
-     :If 0≠⊃⎕←#.jarvis.Start
+     z←#.jarvis.Start
+     'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Jarvis start: ',⍕⊃z
+     :If 0≠⊃z
          ∘∘∘
      :EndIf
      #.JARVIS_URL←'http://',#.Triggers.Config.JarvisHost,((#.Triggers.Config.JarvisPort≠80)/':',(⍕#.Triggers.Config.JarvisPort)),'/'
@@ -153,7 +158,8 @@
  :If 0=≢codeDir
      codeDir←Home
  :EndIf
- 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducta v',Version codeDir
+ #.Config.version←Version codeDir
+ 'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Started Konducta v',#.Config.version
 
 ⍝ aktualisierung triggers umschreiben!!! (entweder anfang oder ende, aber nicht 2*!)
 ⍝ update list of events
@@ -172,13 +178,12 @@
 
                      Handler←i⊃#.Triggers.handlers  ⍝ "Handler" might be used  in rules or "Run"
                      'DBG' 'SYS'Handler.Log'───────── Next round for handler: ',⍕Handler
-                     ⎕←'trg='
                      ref←i⊃#.Triggers.instances   ⍝ see initial comments about re-creating instances only when needed!
                      :If 0<≢events←ref⍎'Run ⍬'
                ⍝ add to queue...
                          add2Q¨events
                      :EndIf
-                     ⎕←'≢events=',≢events
+                     'DBG' 'SYS'Handler.Log'≢events=',⍕≢events
                  :EndFor
                  procEvents
                  ref←Triggers.Config⍎ns
@@ -192,7 +197,7 @@
                      :For ns :In #.Triggers.Config.⎕NL ¯9
                          :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
                              ⍎'#.Triggers.Config.',ns,'.config.id←ns'
-                             ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,'/',ns,'/',''''
+                             ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,ns,'/',''''
                          :EndIf
                      :EndFor
                  :EndIf
@@ -205,7 +210,7 @@
                  :EndIf
                  :If #.Config.debug _hasBitSet 3
                      (⎕LC[1]+1)⎕STOP 1⊃⎕SI
-                     ⎕←'Stopping after execution of one loop as request by Config.debug'
+                     'INFO' 'SYS'Handler.Log'Stopping after execution of one loop as requested by Config.debug'
                  :Else
                      ⎕DL check_freq  ⍝ wait...
                  :EndIf

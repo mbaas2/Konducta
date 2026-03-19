@@ -1,9 +1,8 @@
- R←Version w;base;sha;tag;path;vfile;p∆
+ R←Version path;base;sha;tag;path;vfile;p∆
 ⍝ Returns Konducta version from VERSION file
 ⍝ In development: appends -dev+SHA (e.g., "1.0.0-dev+a3f5c2b")
 ⍝ On tagged release: clean version (e.g., "1.0.0")
 ⍝ ⍵: optional path to repo root (default: current #.Home)
- path←{0=⎕NC'⍵':'' ⋄ ⍵}w
  :If 0=≢path
  :AndIf 9=#.⎕NC'Home'
      path←#.Home
@@ -14,7 +13,7 @@
  :EndIf
  vfile←path,'VERSION'
  :If ⎕NEXISTS vfile
-     base←⊃⎕NGET vfile 1
+     base←⊃1⊃⎕NGET vfile 1
          ⍝ Check if we're on a tagged release
      :Trap 0
          tag←⊃⎕SH'cd "',path,'" && git describe --exact-match --tags 2>nul'
