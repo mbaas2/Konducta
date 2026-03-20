@@ -16,7 +16,7 @@
      base←⊃1⊃⎕NGET vfile 1
          ⍝ Check if we're on a tagged release
      :Trap 0
-         tag←⊃⎕SH'cd "',path,'" && git describe --exact-match --tags 2>nul'
+         tag←⊃⎕SH'cd "',path,'" && git describe --exact-match --tags 2>/dev/null'
          :If 0<≢tag
              R←base  ⍝ On tag: return clean version
              →0
@@ -24,7 +24,7 @@
      :EndTrap
          ⍝ Development: append git SHA
      :Trap 0
-         sha←⊃⎕SH'cd "',path,'" && git rev-parse --short HEAD 2>nul'
+         sha←⊃⎕SH'cd "',path,'" && git rev-parse --short HEAD 2>/dev/null'
          :If 0<≢sha
              R←base,'-dev+',sha
          :Else
