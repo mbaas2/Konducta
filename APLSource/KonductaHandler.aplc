@@ -52,9 +52,7 @@
      
       ⍝ finally: check if there are any ⍙id⍙ sequences in the result and replace them with the text they refer to
       ⍝ maybe: also allow ⍙%var⍙ to refer to envvars?
-      replace⍙←{
-          (1 ⎕C 2⊃⍵.Match)∊⎕A:⍙ 1↓¯1↓⍵.Match   ⍝ replace ⍙id⍙ with text of given id
-      }
+      replace⍙←{(1 ⎕C 2⊃⍵.Match)∊⎕A:⍙ 1↓¯1↓⍵.Match}
       :If '⍙'∊∊txt
           txt←('⍙([^⍙]*)⍙'⎕R replace⍙)txt
       :EndIf

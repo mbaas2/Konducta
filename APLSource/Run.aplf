@@ -197,6 +197,9 @@
                      #.Triggers.Config←⎕JSON #.readConfig cfgTriggersFile   ⍝ read config file
                      :For ns :In #.Triggers.Config.⎕NL ¯9
                          :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
+                             :If 0=#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.config'
+                                 'config'(#.Triggers.Config⍎ns).⎕NS''
+                             :EndIf
                              ⍎'#.Triggers.Config.',ns,'.config.id←ns'
                              ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,ns,'/',''''
                          :EndIf
