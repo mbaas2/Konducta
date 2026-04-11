@@ -44,7 +44,7 @@
  :If 3=#.⎕NC'ApplySecretsIfChanged'
      {}ApplySecretsIfChanged ⍬
  :EndIf
- Trapping←#.Config{6::0 ⋄ ⍺⍎⍵}'Trapping'
+ Trapping←#.Config{6::1 ⋄ ⍺⍎⍵}'Trapping'
  #.HTMLFOLDER←(⎕MKDIR⍠'Unique' 1)(739⌶0),'/Konducta_HTML_'   ⍝ might be used by handlers to store html files for delivery via Jarvis (or similar)
 
  ⍝ Load handler repositories from config (new modular approach)
