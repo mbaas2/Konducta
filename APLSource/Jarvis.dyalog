@@ -6,7 +6,7 @@
 
     ∇ r←Version
       :Access public shared
-      r←'Jarvis' '1.22.2' '2026-02-02'
+      r←'Jarvis' '1.22.4' '2026-04-22'
     ∇
 
     ∇ Documentation
@@ -104,34 +104,45 @@
           r←_htmlInterface
         ∇
 
-        ∇ set args;html;t;old_htmlInterface;old_htmlFolder;old_htmlDefaultPage
-          old_htmlInterface←_htmlInterface
+        ∇ set args;html;t;old_htmlInterface;old_htmlFolder;old_htmlDefaultPage;current;reset
+        ⍝ capture current state
+          current←⎕NS''
+          current.(_htmlInterface _htmlEnabled _htmlRootFn _htmlFolder _htmlDefaultPage _homePage)←_htmlInterface _htmlEnabled _htmlRootFn _htmlFolder _htmlDefaultPage _homePage
+         
+        ⍝ build function to reset current state to avoid duplication of code below
+          reset←{(_htmlInterface _htmlEnabled _htmlRootFn _htmlFolder _htmlDefaultPage _homePage)∘←current.(_htmlInterface _htmlEnabled _htmlRootFn _htmlFolder _htmlDefaultPage _homePage)}
+         
+        ⍝ set default state
           (_htmlEnabled _htmlRootFn _htmlFolder _htmlDefaultPage _homePage)←0 '' '' 'index.html' 1 ⍝ reset original field values
+         
           :Select ⊃_htmlInterface←args.NewValue
           :Case 0 ⍝ explicitly no HTML interface, carry on
-              _htmlEnabled←0
           :Case 1 ⍝ explicitly turned on
-              :If Paradigm≢'JSON'
-                  Log'HTML interface is only available using JSON paradigm'
-              :Else
-                  _htmlEnabled←1
+              :If Paradigm≢⍥⎕C'JSON'
+                  reset''
+                  'HTML interface is only available using JSON paradigm'⎕SIGNAL 11
               :EndIf
+              _htmlEnabled←1
           :Case ¯1 ⍝ turn on if JSON paradigm
-              _htmlEnabled←Paradigm≡'JSON' ⍝ if not specified, HTML interface is enabled for JSON paradigm
+              _htmlEnabled←Paradigm≡⍥⎕C'JSON' ⍝ if not specified, HTML interface is enabled for JSON paradigm
           :Else
+              :If Paradigm≢⍥⎕C'JSON'
+                  reset''
+                  'HTML interface is only available using JSON paradigm'⎕SIGNAL 11
+              :EndIf
               :If 1<|≡_htmlInterface ⍝ is it '' 'function'?
                   t←2⊃_htmlInterface
-                  :If 1 1 0≡⊃CodeLocation.⎕AT t
+                  :If ∧/(⊃({2=⎕NC'⍵':⍎⍵ ⋄ ⍵}CodeLocation).⎕AT t)∊¨1(1 ¯2)0
                       _htmlRootFn←t
                       _htmlEnabled←1
+                      _homePage←1
                   :Else
-                      →0 If(rc msg)←¯1('HTML root function "',(⍕CodeLocation),'.',t,'" is not a monadic, result-returning function.')
+                      reset''
+                      ('HTML root function "',(⍕CodeLocation),'.',t,'" is not a monadic or ambivalent, result-returning function.')⎕SIGNAL 11
                   :EndIf
               :Else ⍝  otherwise it's 'file/folder'
                   _htmlEnabled←1
                   html←1 ⎕NPARTS((isRelPath _htmlInterface)/_rootFolder),_htmlInterface
-         
-                  (old_htmlFolder old_htmlDefaultPage)←_htmlFolder _htmlDefaultPage
                   :If isDir∊html
                       _htmlFolder←{⍵,('/'=⊢/⍵)↓'/'}∊html
                   :Else
@@ -141,8 +152,8 @@
                   _homePage←⎕NEXISTS html←_htmlFolder,_htmlDefaultPage
                   :If _started
                   :AndIf ~_homePage
-                      (_htmlInterface _htmlFolder _htmlDefaultPage)←old_htmlInterface old_htmlFolder old_htmlDefaultPage
-                      Log'HTML home page file "',(∊html),'" not found.'
+                      reset''
+                      ('HTML home page file "',(∊html),'" not found.')⎕SIGNAL 6
                   :EndIf
               :EndIf
           :EndSelect
@@ -483,7 +494,7 @@
           :EndIf
           _configLoaded←1
       :Else
-          →0⊣(rc msg)←⎕DMX.EN ⎕DMX.('Error loading configuration: ',EM,(~0∊⍴Message)/' (',Message,')')
+          →0⊣(rc msg)←⎕DMX.EN ⎕DMX.(EM,(~0∊⍴Message)/' (',Message,')')
       :EndTrap
     ∇
 
@@ -1960,7 +1971,7 @@
 
     ∇ r←fmtCongaEvent evt
     ⍝ formats the result of LDRC.Wait
-      r←(⍕3↑evt),' ',{500≥≢⍵:⍵ ⋄ (⍕≢⍵),'⍴ ',(250↑⍵),' ... ',(¯250↑⍵)}4⊃evt,'' '' ⍝ ensure evt has a 4th element  
+      r←(⍕3↑evt),' ',{500≥≢⍵:⍵ ⋄ (⍕≢⍵),'⍴ ',(250↑⍵),' ... ',(¯250↑⍵)}4⊃evt,'' '' ⍝ ensure evt has a 4th element
     ∇
 
     ∇ r←InTerm;system
@@ -2023,10 +2034,11 @@
     ⍝ resolve filename to an absolute path even if it contains . .. or symbolic links
     ⍝ under Windows 1 ⎕NPARTS does this, but not on non-Windows
     ⍝ so, on non-Windows, we try to use the "realpath" command
-    ⍝ NB: realpath might need to be installed if you're running on AIX
+    ⍝ NB: realpath might need to be installed if you're running on AIX     
       :If isWin
           r←∊1 ⎕NPARTS filename
       :Else
+          filename←1⌽'''''',''''⎕R'''\\'''''⊢filename ⍝ enclose in quotes, escaping existing quotes
           r←{0::'' ⋄ ⊃⎕SH'realpath ',filename,' 2>/dev/null'}filename
       :EndIf
     ∇
