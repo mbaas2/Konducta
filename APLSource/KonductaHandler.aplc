@@ -23,7 +23,7 @@
       R←txt_ns.##
     ∇
 
-    ∇ txt←⍙ id;values;ns;i;replace⍙
+    ∇ txt←⍙ id;values;ns;i;replace⍙;lang;base;file
       :Access public
 ⍝ return text with given id
 ⍝ look in namespace for current language first, use "en" as fallback
@@ -34,13 +34,33 @@
       :Else
           values←⍬
       :EndIf
-      :If 2=(ns←txt_ns⍎cfg.##.handler_cfg.lang).⎕NC id
+      lang←cfg.##.handler_cfg.lang
+      :If 2=(ns←txt_ns⍎lang).⎕NC id
           txt←ns⍎id
       :ElseIf 2=(ns←txt_ns⍎'en').⎕NC id
+          lang←'en'
           txt←ns⍎id
       :Else ⍝*** id not found!
           'ERR' 'SYS'Log'⍙''',id,''' not found!'
           txt←id              ⍝ return id as text
+      :EndIf
+
+      :If (⎕UCS 65533)∊∊txt
+          ⍝ Some platforms may import UTF-8 .apla text resources with the wrong default
+          ⍝ encoding. Re-read the source file explicitly as UTF-8 before placeholders expand.
+          base←myBase
+          :If 2=base.⎕NC'RepoPath'
+              file←base.RepoPath,'APLSource/alisia_texts/',lang,'/',id,'.apla'
+              :If ⎕NEXISTS file
+                  :Trap 0
+                      txt←⍎⊃'UTF-8'⎕NGET file
+                      id ns.{⍎⍺,'←⍵'}txt
+                      'WARN' 'SYS'Log'Reloaded UTF-8 text resource after U+FFFD detection: ',file
+                  :Else
+                      'WARN' 'SYS'Log'Could not reload UTF-8 text resource: ',file
+                  :EndTrap
+              :EndIf
+          :EndIf
       :EndIf
      
       :For i :In ⍳{0=≢⍵:0 ⋄ ≢⊆⍵}values
