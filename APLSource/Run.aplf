@@ -1,16 +1,30 @@
- Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash;cb;cbfn;call;Handler;res;hdl_idx
+ Run nul;z;ns;check_freq;cls;ref;trigger;trg;Home;config;rules;pckgs;mkt;p;ARG;hdl;project_dir;ct;cfg;FixEnvRefs;i;JARVIS_URL;JarvisConfig;jarvis_callbacks;Trapping;codeDir;ConfigRoot;cfgEnv;rootEnv;cfgRulesFile;cfgTriggersFile;cfgMainFile;EnsureSlash;cb;cbfn;call;Handler;res;hdl_idx;hdlClass;r2;events;dir;opts
 ⍝ Initialises eventler and starts the main "listinging loop"
 ⍝  Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI  ⍝
 ⍝  Home←1⊃⎕NPARTS ¯1↓Home          ⍝ "#.Home" refers to Eventler's rootDir  (while we load from the APLSource folder)
  ⎕SE.SESSIONSTART←'*** Konducta *** ',⍕⎕TS
- DATA←{⍵,(~⍵[≢⍵]∊'\/')/'/'}2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_DATA'
+ EnsureSlash←{0=≢⍵:'' ⋄ ⍵,(~⍵[≢⍵]∊'\/')/'/'}
+ DATA←EnsureSlash 2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_DATA'
  #.DATA←DATA
 ⍝  #.Home←Home
 ⍝  ⎕←'Home=',Home
 
- EnsureSlash←{0=≢⍵:'' ⋄ ⍵,(~⍵[≢⍵]∊'\/')/'/'}
  cfgEnv←2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_CONFIG'
- #.Home←Home←1⊃⎕NPARTS cfgEnv
+ :If 0=≢cfgEnv
+     cfgEnv←2 ⎕NQ'.' 'GetEnvironment' 'KonductaConfig'
+ :EndIf
+ rootEnv←EnsureSlash 2 ⎕NQ'.' 'GetEnvironment' 'KONDUCTA_ROOT'
+ :If 0<≢cfgEnv
+     #.Home←Home←EnsureSlash 1⊃⎕NPARTS cfgEnv
+ :ElseIf 0<≢rootEnv
+     #.Home←Home←rootEnv
+ :Else
+     Home←1⊃1 ⎕NPARTS 50 ⎕ATX 1⊃⎕SI
+     #.Home←Home←EnsureSlash 1⊃⎕NPARTS ¯1↓Home
+ :EndIf
+ :If 0=≢DATA
+     #.DATA←DATA←Home,'Data/'
+ :EndIf
  'INFO' 'SYS'#.Log('Home=',Home)(#.DATA,'SYS/')
  ConfigRoot←EnsureSlash cfgEnv
  :If 0=≢ConfigRoot
@@ -40,7 +54,7 @@
  rules←⎕JSON readConfig cfgRulesFile
  #.Triggers.Config←⎕JSON readConfig cfgTriggersFile   ⍝ read config file
  #.Config←⎕JSON readConfig cfgMainFile   ⍝ read config file
- #.Config.version←#.Version 1⊃160⌶'KONDUCTA_ROOT'
+ #.Config.version←#.Version Home
  :If 3=#.⎕NC'ApplySecretsIfChanged'
      {}ApplySecretsIfChanged ⍬
  :EndIf
@@ -70,7 +84,7 @@
          3 ⎕MKDIR ref.config.Folder  ⍝ be sure that Folder exists
          hdl←ref.handler
          hdlClass←ResolveHandler hdl
-         'INFO' 'SYS'#.Log('Handler = ⎕NEW ',hdlClass,'(ref.handler_cfg ns ref)')(#.DATA,'SYS/')
+         'INFO' 'SYS'#.Log('Handler = ⎕NEW ',(⍕hdlClass),'(ref.handler_cfg ns ref)')(#.DATA,'SYS/')
          hdl←⎕NEW hdlClass(ref.handler_cfg ns ref)
          #.Triggers.handlers,←hdl
          hdl_idx←≢#.Triggers.handlers
@@ -129,6 +143,8 @@
              :If res≢1⊃cb
                  'ERR' 'SYS'(⊃#.Triggers.handlers).Log'Error creating callback function for Jarvis: ',(1⊃cb),' (',res,')'
                  ∘∘∘
+                 :else
+                 'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Created callback function for Jarvis'
              :EndIf
          :EndIf
      :EndFor
@@ -136,17 +152,23 @@
    ⍝ and configure it
      'JarvisConfig'⎕NS''
      JarvisConfig.CodeLocation←#.CodeLocation
-     JarvisConfig.(Port Secure)←#.Triggers.Config.(JarvisPort,{6::0 ⋄ ⍎w}'JarvisSecure')
+     JarvisConfig.Port←#.Triggers.Config.JarvisPort
+     JarvisConfig.Secure←#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}'JarvisSecure'
      JarvisConfig.Paradigm←'JSON'
      :If 0<≢⊃0(⎕NINFO⍠1)HTMLFOLDER,'/*'
          JarvisConfig.HTMLInterface←HTMLFOLDER
      :EndIf
      JarvisConfig.HTMLDefaultPage←''
-     JarvisConfig.Jarvis_Thread←0
+    ⍝  JarvisConfig.DYALOG_JARVIS_THREAD←1
      JarvisConfig.AllowGETs←1  ⍝ allow calling endpoints with Http-GET
+     :trap 0
      JarvisConfig.Debug←#.Triggers.Config'JarvisDebug'{0=(1⊃⍺).⎕NC 2⊃⍺:⍵ ⋄ ⍎/⍺}0
+     :else 
+     'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Error setting .Debug: ',⎕json ⎕dmx
+     :endtrap
 ⍝ should add ValidateRequest and check for some credentials to make it harder to hack
      #.jarvis←#.Jarvis.New JarvisConfig
+     'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Launching Jarvis'
      z←#.jarvis.Start
      'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Jarvis start: ',⍕⊃z
      :If 0≠⊃z
