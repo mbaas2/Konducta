@@ -224,8 +224,11 @@
          :Select ⎕EN
          :Case 801   ⍝ RESTART Event (triggered by GITUPD)
              'DBG' 'SYS'(⊃#.Triggers.handlers).Log'Restart event was triggered'
-             →1
+         :Else
+             'ERR' 'SYS'(⊃#.Triggers.handlers).Log'Unexpected error in main loop'
+             'ERR' 'SYS'(⊃#.Triggers.handlers).Log ⎕JSON ⎕DMX
          :EndSelect
+         →1   ⍝ always restart the loop after handling the event, even if it was an error (we don't want to stop the whole process just because of a single error!)
      :EndTrap
  :Case 802 ⍝ DETRAP
      Trapping←0
