@@ -33,7 +33,7 @@
      (⎕NDELETE⍠'Wildcard' 1)DATA,'/evq/*.json5'
      'INFO' 'SYS'#.Log('Deleted ',(⍕z),' old files from queue during startup')(#.DATA,'SYS/')
  :EndIf
- ⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
+ {}'{overwrite: 1}'⎕SE.Link.Import(1⊃160⌶'DYALOG'),'/Library/Core/APLProcess.dyalog'
 
 
 
