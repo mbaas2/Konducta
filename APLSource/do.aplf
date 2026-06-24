@@ -25,7 +25,6 @@
          ⎕SIGNAL ⎕EN   ⍝ pass-through the restart event
      :Else
          'ERR' 'SYS'Handler.Log(⎕JSON ⎕OPT'Compact' 0)⎕DMX
-         ∘∘∘
      :EndIf
  :EndTrap
 Exit:
