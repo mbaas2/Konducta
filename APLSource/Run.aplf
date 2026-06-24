@@ -72,11 +72,15 @@
  check_freq←⌊/⍬
  #.Triggers.(list instances handlers)←⊂⍬
  '#.Triggers.handlerMap'⎕NS''
+ 'INFO' 'SYS'#.Log'read ',cfgTriggersFile,'Trigger-Configs: ',¯1↓∊'"',(#.Triggers.Config.⎕NL ¯9),'"'
  :For ns :In #.Triggers.Config.⎕NL ¯9
      :If 0=⎕NC'#.Triggers.Config.',ns,'.config'       ⍝ create config ns if it doesn't exist in the json data
          ('#.Triggers.Config.',ns,'.config')⎕NS''
+         'INFO' 'SYS'#.Log'Created config namespace for trigger: ',ns
+     :Else
+         'INFO' 'SYS'#.Log'Did not create config namespace for trigger because it already existed: ',ns
      :EndIf
-     :If ~#.Triggers.Config{6::0 ⋄ ⍺⍎⍵}ns,'.disabled'
+     :If ~#.Triggers.Config{6::0 ⋄ 2⊃⎕VFI⍕⍺⍎⍵}ns,'.disabled'
          ⍎'#.Triggers.Config.',ns,'.config.id←ns'
          ⍎'#.Triggers.Config.',ns,'.config.Folder←''',DATA,ns,'/',''''
          ref←Triggers.Config.⍎ns
@@ -103,9 +107,11 @@
              :EndIf
              jarvis_callbacks,←(~z)/(⊂¨⊆ref.jarvis_callbacks),¨hdl_idx
          :EndIf
+     :Else
+         'INFO' 'SYS'#.Log'Trigger is disabled, skipping: ',ns
      :EndIf
  :EndFor
-
+ 'INFO' 'SYS'#.Log'Triggers.list=',⍕#.Triggers.list
  :If 3=#.⎕NC'secret_update'
  :AndIf ~(⊂'secret_update')∊jarvis_callbacks
      jarvis_callbacks,←⊂'secret_update' '#'
@@ -143,7 +149,7 @@
              :If res≢1⊃cb
                  'ERR' 'SYS'(⊃#.Triggers.handlers).Log'Error creating callback function for Jarvis: ',(1⊃cb),' (',res,')'
                  ∘∘∘
-                 :else
+             :Else
                  'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Created callback function for Jarvis'
              :EndIf
          :EndIf
@@ -161,11 +167,11 @@
      JarvisConfig.HTMLDefaultPage←''
     ⍝  JarvisConfig.DYALOG_JARVIS_THREAD←1
      JarvisConfig.AllowGETs←1  ⍝ allow calling endpoints with Http-GET
-     :trap 0
-     JarvisConfig.Debug←#.Triggers.Config'JarvisDebug'{0=(1⊃⍺).⎕NC 2⊃⍺:⍵ ⋄ ⍎/⍺}0
-     :else 
-     'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Error setting .Debug: ',⎕json ⎕dmx
-     :endtrap
+     :Trap 0
+         JarvisConfig.Debug←#.Triggers.Config'JarvisDebug'{0=(1⊃⍺).⎕NC 2⊃⍺:⍵ ⋄ ⍎/⍺}0
+     :Else
+         'DBG' 'SYS'(1⊃#.Triggers.handlers).Log'Error setting .Debug: ',⎕JSON ⎕DMX
+     :EndTrap
 ⍝ should add ValidateRequest and check for some credentials to make it harder to hack
      #.jarvis←#.Jarvis.New JarvisConfig
      'INFO' 'SYS'(⊃#.Triggers.handlers).Log'Launching Jarvis'

@@ -78,7 +78,8 @@
     ∇ {r}←{lv_cat}Log msg
       :Access public
       ⍝ Delegate to #.Log with this handler's folder and cfg
-      r←lv_cat #.Log(msg CFG.config.Folder cfg)
+      lv_cat #.Log(msg CFG.config.Folder cfg)
+      r←''
     ∇
 
     ∇ txt←{days}GetLogs flt;offset;d;logf;rawlog
