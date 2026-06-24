@@ -95,7 +95,7 @@
          ⍎'#.Triggers.handlerMap.',ns,'←hdl'
          cls←('#.Triggers.'{⍺,⍵,'.',⍵}' '~⍨⍕ref.type)
          'INFO' 'SYS'#.Log('⎕NEW ',cls,' #.Triggers.Config.',ns,'.config')(#.DATA,'SYS/')
-         #.Triggers.list←⊂'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
+         #.Triggers.list,←⊂'⎕NEW ',cls,' #.Triggers.Config.',ns,'.config'
          #.Triggers.instances,←r2←⍎⊃¯1↑#.Triggers.list
          hdl.TheInstance←r2
          r2.Loc←ns
